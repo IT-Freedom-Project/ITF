@@ -16,18 +16,10 @@ add_or_update_setting() {
             echo "Добавлено: $setting в $file"
         fi
     elif [[ "$file" == "/etc/security/limits.conf" ]]; then
-        local domain=$(echo "$setting" | awk '{print $1}')
-        local type=$(echo "$setting" | awk '{print $2}')
-        local item=$(echo "$setting" | awk '{print $3}')
-        local value=$(echo "$setting" | awk '{print $4}')
-        
-        # Проверяем, существует ли уже строка с такими же доменом, типом и пунктом
-        if grep -qE "^$domain\s+$type\s+$item\s" "$file"; then
-            # Обновляем значение, если строка найдена
-            sudo sed -i "/^$domain\s+$type\s+$item\s/c\\$domain $type $item $value" "$file"
-            echo "Обновлено: $domain $type $item $value в $file"
+        # Проверяем, существует ли уже строка с такими же настройками
+        if grep -qFx "$setting" "$file"; then
+            echo "Настройка уже существует в $file: $setting"
         else
-            # Добавляем настройку, если она не найдена
             echo "$setting" | sudo tee -a "$file"
             echo "Добавлено: $setting в $file"
         fi
