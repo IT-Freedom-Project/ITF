@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "Скрипт для оптимизации TCP (+BBR) и UDP на Linux сервере от IT Freedom Project (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube) "
 
-# Функция для удаления всех существующих строк с параметрами в файле
+# Функция для удаления всех существующих строк с параметрами в файле /etc/security/limits.conf
 remove_existing_settings() {
     local file="$1"
     shift
@@ -11,7 +11,7 @@ remove_existing_settings() {
 }
 
 
-# Функция для безопасного добавления настроек в файл, если они еще не существуют
+# Функция для безопасного добавления настроек в файл /etc/sysctl.conf, если они еще не существуют
 add_or_update_setting() {
     local file="$1"
     local setting="$2"
@@ -30,7 +30,6 @@ add_or_update_setting() {
     fi
 }
 
-echo "Обновление /etc/security/limits.conf..."
 echo "Обновление /etc/security/limits.conf..."
 
 # Удаляем все существующие строки с параметрами
