@@ -21,20 +21,18 @@ add_or_update_setting() {
         local item=$(echo "$setting" | awk '{print $3}')
         local value=$(echo "$setting" | awk '{print $4}')
         
-        # Проверка наличия группы настроек для лимитов на количество открытых файлов
-        if grep -qE "^\*\s+soft\s+nofile\s+" "$file" || \
-           grep -qE "^\*\s+hard\s+nofile\s+" "$file" || \
-           grep -qE "^root\s+soft\s+nofile\s+" "$file" || \
-           grep -qE "^root\s+hard\s+nofile\s+" "$file"; then
-            sudo sed -i '/^\*\s+soft\s+nofile\s\+/d' "$file"
-            sudo sed -i '/^\*\s+hard\s+nofile\s\+/d' "$file"
-            sudo sed -i '/^root\s+soft\s+nofile\s\+/d' "$file"
-            sudo sed -i '/^root\s+hard\s+nofile\s\+/d' "$file"
+        # Проверка наличия строки с такими же доменом, типом и пунктом
+        if grep -qE "^$domain\s+$type\s+$item\s" "$file"; then
+            # Обновляем значение, если строка найдена
+            sudo awk -v domain="$domain" -v type="$type" -v item="$item" -v value="$value" \
+                '$1==domain && $2==type && $3==item {$4=value; print; next} {print}' "$file" > temp_file && \
+            sudo mv temp_file "$file"
+            echo "Обновлено: $domain $type $item $value в $file"
+        else
+            # Добавляем настройку, если она не найдена
+            echo "$setting" | sudo tee -a "$file"
+            echo "Добавлено: $setting в $file"
         fi
-        
-        # Добавляем настройки лимитов на количество открытых файлов
-        echo "$setting" | sudo tee -a "$file"
-        echo "Добавлено: $setting в $file"
     fi
 }
 
