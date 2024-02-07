@@ -38,11 +38,15 @@ add_or_update_setting() {
 
 echo "Обновление /etc/security/limits.conf и /etc/sysctl.conf..."
 
-# Добавляем или обновляем настройки в /etc/security/limits.conf
-add_or_update_setting /etc/security/limits.conf "* soft nofile 51200" # Устанавливаем мягкий лимит на количество открытых файлов
-add_or_update_setting /etc/security/limits.conf "* hard nofile 51200" # Устанавливаем жесткий лимит на количество открытых файлов
-add_or_update_setting /etc/security/limits.conf "root soft nofile 51200" # Мягкий лимит для root
-add_or_update_setting /etc/security/limits.conf "root hard nofile 51200" # Жесткий лимит для root
+# Добавляем или обновляем настройки в /etc/security/limits.conf только если они еще не существуют
+if ! grep -qE "^(\*|root)\s+soft\s+nofile\s+51200" "/etc/security/limits.conf"; then
+    add_or_update_setting /etc/security/limits.conf "* soft nofile 51200" # Устанавливаем мягкий лимит на количество открытых файлов
+    add_or_update_setting /etc/security/limits.conf "* hard nofile 51200" # Устанавливаем жесткий лимит на количество открытых файлов
+    add_or_update_setting /etc/security/limits.conf "root soft nofile 51200" # Мягкий лимит для root
+    add_or_update_setting /etc/security/limits.conf "root hard nofile 51200" # Жесткий лимит для root
+else
+    echo "Настройки в /etc/security/limits.conf уже существуют, пропуск добавления."
+fi
 
 # Добавляем или обновляем настройки в /etc/sysctl.conf
 settings=(
