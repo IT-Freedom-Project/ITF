@@ -2,11 +2,11 @@
 \
 Для запуска скрипта выполняем эту команду:\
 \
-```wget -O bbr-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF-Youtube/main/BBR/bbr-itf.sh && sudo bash bbr-itf.sh```\
+```wget -O bbr-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/BBR/bbr-itf.sh && sudo bash bbr-itf.sh```\
 \
 или эту: \
 \
-```curl -o bbr-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF-Youtube/main/BBR/bbr-itf.sh && sudo bash bbr-itf.sh``` \
+```curl -o bbr-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/BBR/bbr-itf.sh && sudo bash bbr-itf.sh``` \
 \
  /etc/security/limits.conf:\
 \# Устанавливаем мягкий лимит на количество открытых файлов\
