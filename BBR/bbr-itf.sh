@@ -1,38 +1,31 @@
 #!/bin/bash
 echo "Скрипт для оптимизации TCP (+BBR) и UDP на Linux сервере от IT Freedom Project (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube)"
 
-# Функция для добавления или обновления настроек в файле
-add_or_update_setting() {
+# Функция для удаления существующих строк с параметрами в файле
+remove_existing_settings() {
+    local file="$1"
+    sudo sed -i '/^\(\*\|root\) \(soft\|hard\) nofile/d' "$file"
+    echo "Удалены существующие строки с параметрами в $file"
+}
+
+# Функция для добавления настроек в файл
+add_settings() {
     local file="$1"
     local setting="$2"
-    if [[ "$file" == "/etc/sysctl.conf" ]]; then
-        local key=$(echo "$setting" | cut -d '=' -f 1)
-        local value=$(echo "$setting" | cut -d '=' -f 2-)
-        if grep -qE "^$key\s*=" "$file"; then
-            sudo sed -i "s/^$key\s*=.*/$setting/" "$file"
-            echo "Обновлено: $setting в $file"
-        else
-            echo "$setting" | sudo tee -a "$file"
-            echo "Добавлено: $setting в $file"
-        fi
-    elif [[ "$file" == "/etc/security/limits.conf" ]]; then
-        # Проверяем, существует ли уже строка с такими же настройками
-        if grep -qFx "$setting" "$file"; then
-            echo "Настройка уже существует в $file: $setting"
-        else
-            echo "$setting" | sudo tee -a "$file"
-            echo "Добавлено: $setting в $file"
-        fi
-    fi
+    echo "$setting" | sudo tee -a "$file"
+    echo "Добавлено: $setting в $file"
 }
 
 echo "Обновление /etc/security/limits.conf и /etc/sysctl.conf..."
 
-# Добавляем или обновляем настройки в /etc/security/limits.conf
-add_or_update_setting /etc/security/limits.conf "* soft nofile 51200" # Устанавливаем мягкий лимит на количество открытых файлов
-add_or_update_setting /etc/security/limits.conf "* hard nofile 51200" # Устанавливаем жесткий лимит на количество открытых файлов
-add_or_update_setting /etc/security/limits.conf "root soft nofile 51200" # Мягкий лимит для root
-add_or_update_setting /etc/security/limits.conf "root hard nofile 51200" # Жесткий лимит для root
+# Удаляем существующие строки с параметрами в /etc/security/limits.conf
+remove_existing_settings /etc/security/limits.conf
+
+# Добавляем настройки в /etc/security/limits.conf
+add_settings /etc/security/limits.conf "* soft nofile 51200" # Устанавливаем мягкий лимит на количество открытых файлов
+add_settings /etc/security/limits.conf "* hard nofile 51200" # Устанавливаем жесткий лимит на количество открытых файлов
+add_settings /etc/security/limits.conf "root soft nofile 51200" # Мягкий лимит для root
+add_settings /etc/security/limits.conf "root hard nofile 51200" # Жесткий лимит для root
 
 # Добавляем или обновляем настройки в /etc/sysctl.conf
 settings=(
@@ -62,7 +55,7 @@ settings=(
 )
 
 for setting in "${settings[@]}"; do
-    add_or_update_setting /etc/sysctl.conf "$setting"
+    echo "$setting" | sudo tee -a /etc/sysctl.conf
 done
 
 echo "Применение изменений..."
