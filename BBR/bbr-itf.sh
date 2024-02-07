@@ -21,12 +21,10 @@ add_or_update_setting() {
         local item=$(echo "$setting" | awk '{print $3}')
         local value=$(echo "$setting" | awk '{print $4}')
         
-        # Проверка наличия строки с такими же доменом, типом и пунктом
+        # Проверяем, существует ли уже строка с такими же доменом, типом и пунктом
         if grep -qE "^$domain\s+$type\s+$item\s" "$file"; then
             # Обновляем значение, если строка найдена
-            sudo awk -v domain="$domain" -v type="$type" -v item="$item" -v value="$value" \
-                '$1==domain && $2==type && $3==item {$4=value; print; next} {print}' "$file" > temp_file && \
-            sudo mv temp_file "$file"
+            sudo sed -i "/^$domain\s+$type\s+$item\s/c\\$domain $type $item $value" "$file"
             echo "Обновлено: $domain $type $item $value в $file"
         else
             # Добавляем настройку, если она не найдена
