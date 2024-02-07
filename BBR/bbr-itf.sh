@@ -1,50 +1,78 @@
 #!/bin/bash
-echo "Скрипт для оптимизации TCP (+BBR) и UDP на Linux сервере от IT Freedom Project (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube) "
-# Функция для безопасного добавления настроек в файл, если они еще не существуют
-add_if_not_exists() {
+echo "Скрипт для оптимизации TCP (+BBR) и UDP на Linux сервере от IT Freedom Project (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube)"
+
+# Функция для добавления или обновления настроек в файле
+add_or_update_setting() {
     local file="$1"
     local setting="$2"
-    grep -qF -- "$setting" "$file" || echo "$setting" | sudo tee -a "$file"
+    if [[ "$file" == "/etc/sysctl.conf" ]]; then
+        local key=$(echo "$setting" | cut -d '=' -f 1)
+        local value=$(echo "$setting" | cut -d '=' -f 2-)
+        if grep -qE "^$key\s*=" "$file"; then
+            sudo sed -i "s/^$key\s*=.*/$setting/" "$file"
+            echo "Обновлено: $setting в $file"
+        else
+            echo "$setting" | sudo tee -a "$file"
+            echo "Добавлено: $setting в $file"
+        fi
+    elif [[ "$file" == "/etc/security/limits.conf" ]]; then
+        local domain=$(echo "$setting" | awk '{print $1}')
+        local type=$(echo "$setting" | awk '{print $2}')
+        local item=$(echo "$setting" | awk '{print $3}')
+        local value=$(echo "$setting" | awk '{print $4}')
+        
+        # Проверка наличия строки с такими же доменом, типом и пунктом
+        if grep -qE "^$domain\s+$type\s+$item\s" "$file"; then
+            # Обновляем значение, если строка найдена
+            sudo awk -v domain="$domain" -v type="$type" -v item="$item" -v value="$value" \
+                '$1==domain && $2==type && $3==item {$4=value; print; next} {print}' "$file" > temp_file && \
+            sudo mv temp_file "$file"
+            echo "Обновлено: $domain $type $item $value в $file"
+        else
+            # Добавляем настройку, если она не найдена
+            echo "$setting" | sudo tee -a "$file"
+            echo "Добавлено: $setting в $file"
+        fi
+    fi
 }
 
-echo "Обновление /etc/security/limits.conf..."
-add_if_not_exists /etc/security/limits.conf "* soft nofile 51200"
-add_if_not_exists /etc/security/limits.conf "* hard nofile 51200"
-add_if_not_exists /etc/security/limits.conf "root soft nofile 51200"
-add_if_not_exists /etc/security/limits.conf "root hard nofile 51200"
+echo "Обновление /etc/security/limits.conf и /etc/sysctl.conf..."
 
-echo "Установка лимита открытых файлов..."
-ulimit -n 51200
+# Добавляем или обновляем настройки в /etc/security/limits.conf
+add_or_update_setting /etc/security/limits.conf "* soft nofile 51200" # Устанавливаем мягкий лимит на количество открытых файлов
+add_or_update_setting /etc/security/limits.conf "* hard nofile 51200" # Устанавливаем жесткий лимит на количество открытых файлов
+add_or_update_setting /etc/security/limits.conf "root soft nofile 51200" # Мягкий лимит для root
+add_or_update_setting /etc/security/limits.conf "root hard nofile 51200" # Жесткий лимит для root
 
-echo "Добавление настроек TCP и UDP в /etc/sysctl.conf..."
+# Добавляем или обновляем настройки в /etc/sysctl.conf
 settings=(
-    "fs.file-max = 51200"
-    "net.core.rmem_max = 67108864"
-    "net.core.wmem_max = 67108864"
-    "net.core.netdev_max_backlog = 10000"
-    "net.core.somaxconn = 4096"
-    "net.core.default_qdisc = fq"
-    "net.ipv4.tcp_syncookies = 1"
-    "net.ipv4.tcp_tw_reuse = 1"
-    "net.ipv4.tcp_fin_timeout = 30"
-    "net.ipv4.tcp_keepalive_time = 1200"
-    "net.ipv4.tcp_keepalive_probes = 5"
-    "net.ipv4.tcp_keepalive_intvl = 30"
-    "net.ipv4.tcp_max_syn_backlog = 8192"
-    "net.ipv4.ip_local_port_range = 10000 65000"
-    "net.ipv4.tcp_slow_start_after_idle = 0"
-    "net.ipv4.tcp_max_tw_buckets = 5000"
-    "net.ipv4.tcp_fastopen = 3"
-    "net.ipv4.udp_mem = 25600 51200 102400"
-    "net.ipv4.tcp_mem = 25600 51200 102400"
-    "net.ipv4.tcp_rmem = 4096 87380 67108864"
-    "net.ipv4.tcp_wmem = 4096 65536 67108864"
-    "net.ipv4.tcp_mtu_probing = 1"
-    "net.ipv4.tcp_congestion_control = bbr"
+    "fs.file-max = 51200" # Максимальное количество открытых файлов для всей системы
+    "net.core.rmem_max = 67108864" # Максимальный размер буфера приема для всех сокетов
+    "net.core.wmem_max = 67108864" # Максимальный размер буфера отправки для всех сокетов
+    "net.core.netdev_max_backlog = 10000" # Максимальное количество пакетов в очереди интерфейса перед обработкой
+    "net.core.somaxconn = 4096" # Лимит размера очереди запросов на установление соединения
+    "net.core.default_qdisc = fq" # Планировщик очереди по умолчанию, используемый для управления перегрузками
+    "net.ipv4.tcp_syncookies = 1" # Включение SYN cookies для защиты от SYN flood атак
+    "net.ipv4.tcp_tw_reuse = 1" # Позволяет повторно использовать TIME-WAIT сокеты для новых соединений
+    "net.ipv4.tcp_fin_timeout = 30" # Таймаут для закрытия соединения на стороне, отправившей FIN
+    "net.ipv4.tcp_keepalive_time = 1200" # Время в секундах до начала отправки keepalive пакетов
+    "net.ipv4.tcp_keepalive_probes = 5" # Количество keepalive проб, прежде чем соединение будет считаться разорванным
+    "net.ipv4.tcp_keepalive_intvl = 30" # Интервал между keepalive пробами
+    "net.ipv4.tcp_max_syn_backlog = 8192" # Максимальное количество соединений в очереди на установление
+    "net.ipv4.ip_local_port_range = 10000 65000" # Диапазон портов, используемых для исходящих соединений
+    "net.ipv4.tcp_slow_start_after_idle = 0" # Отключает slow start после идлового состояния соединения
+    "net.ipv4.tcp_max_tw_buckets = 5000" # Максимальное количество сокетов в состоянии TIME-WAIT
+    "net.ipv4.tcp_fastopen = 3" # Включает TCP Fast Open на стороне клиента и сервера
+    "net.ipv4.udp_mem = 25600 51200 102400" # Параметры памяти UDP: мин., давление, макс.
+    "net.ipv4.tcp_mem = 25600 51200 102400" # Параметры памяти TCP: мин., давление, макс.
+    "net.ipv4.tcp_rmem = 4096 87380 67108864" # Размеры буфера приема TCP: мин., дефолт, макс.
+    "net.ipv4.tcp_wmem = 4096 65536 67108864" # Размеры буфера отправки TCP: мин., дефолт, макс.
+    "net.ipv4.tcp_mtu_probing = 1" # Включает пробирование MTU, чтобы избежать фрагментации пакетов
+    "net.ipv4.tcp_congestion_control = bbr" # Включает BBR как алгоритм контроля конгестии
 )
 
 for setting in "${settings[@]}"; do
-    add_if_not_exists /etc/sysctl.conf "$setting"
+    add_or_update_setting /etc/sysctl.conf "$setting"
 done
 
 echo "Применение изменений..."
