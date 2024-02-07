@@ -26,7 +26,6 @@ settings=(
     "net.core.default_qdisc = fq"
     "net.ipv4.tcp_syncookies = 1"
     "net.ipv4.tcp_tw_reuse = 1"
-    "net.ipv4.tcp_tw_recycle = 0"
     "net.ipv4.tcp_fin_timeout = 30"
     "net.ipv4.tcp_keepalive_time = 1200"
     "net.ipv4.tcp_keepalive_probes = 5"
