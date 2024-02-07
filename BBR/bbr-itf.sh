@@ -21,32 +21,30 @@ add_or_update_setting() {
         local item=$(echo "$setting" | awk '{print $3}')
         local value=$(echo "$setting" | awk '{print $4}')
         
-        # Проверка наличия строки с такими же доменом, типом и пунктом
-        if grep -qE "^$domain\s+$type\s+$item\s" "$file"; then
-            # Обновляем значение, если строка найдена
-            sudo awk -v domain="$domain" -v type="$type" -v item="$item" -v value="$value" \
-                '$1==domain && $2==type && $3==item {$4=value; print; next} {print}' "$file" > temp_file && \
-            sudo mv temp_file "$file"
-            echo "Обновлено: $domain $type $item $value в $file"
-        else
-            # Добавляем настройку, если она не найдена
-            echo "$setting" | sudo tee -a "$file"
-            echo "Добавлено: $setting в $file"
+        # Проверка наличия группы настроек для лимитов на количество открытых файлов
+        if grep -qE "^\*\s+soft\s+nofile\s+" "$file" || \
+           grep -qE "^\*\s+hard\s+nofile\s+" "$file" || \
+           grep -qE "^root\s+soft\s+nofile\s+" "$file" || \
+           grep -qE "^root\s+hard\s+nofile\s+" "$file"; then
+            sudo sed -i '/^\*\s+soft\s+nofile\s\+/d' "$file"
+            sudo sed -i '/^\*\s+hard\s+nofile\s\+/d' "$file"
+            sudo sed -i '/^root\s+soft\s+nofile\s\+/d' "$file"
+            sudo sed -i '/^root\s+hard\s+nofile\s\+/d' "$file"
         fi
+        
+        # Добавляем настройки лимитов на количество открытых файлов
+        echo "$setting" | sudo tee -a "$file"
+        echo "Добавлено: $setting в $file"
     fi
 }
 
 echo "Обновление /etc/security/limits.conf и /etc/sysctl.conf..."
 
-# Добавляем или обновляем настройки в /etc/security/limits.conf только если они еще не существуют
-if ! grep -qE "^(\*|root)\s+soft\s+nofile\s+51200" "/etc/security/limits.conf"; then
-    add_or_update_setting /etc/security/limits.conf "* soft nofile 51200" # Устанавливаем мягкий лимит на количество открытых файлов
-    add_or_update_setting /etc/security/limits.conf "* hard nofile 51200" # Устанавливаем жесткий лимит на количество открытых файлов
-    add_or_update_setting /etc/security/limits.conf "root soft nofile 51200" # Мягкий лимит для root
-    add_or_update_setting /etc/security/limits.conf "root hard nofile 51200" # Жесткий лимит для root
-else
-    echo "Настройки в /etc/security/limits.conf уже существуют, пропуск добавления."
-fi
+# Добавляем или обновляем настройки в /etc/security/limits.conf
+add_or_update_setting /etc/security/limits.conf "* soft nofile 51200" # Устанавливаем мягкий лимит на количество открытых файлов
+add_or_update_setting /etc/security/limits.conf "* hard nofile 51200" # Устанавливаем жесткий лимит на количество открытых файлов
+add_or_update_setting /etc/security/limits.conf "root soft nofile 51200" # Мягкий лимит для root
+add_or_update_setting /etc/security/limits.conf "root hard nofile 51200" # Жесткий лимит для root
 
 # Добавляем или обновляем настройки в /etc/sysctl.conf
 settings=(
