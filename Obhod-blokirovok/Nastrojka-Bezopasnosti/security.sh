@@ -2,11 +2,8 @@
 
 # Переменные конфигурации
 NEW_SSH_PORT=
-OLD_ROOT_PASSWORD=
 NEW_ROOT_PASSWORD=
 SERVER_ADDRESS=
-ADMIN_USER=  # Имя пользователя для SSH, например admin
-ADMIN_PASSWORD=  # Пароль пользователя для SSH, если используется парольная аутентификация
 NEW_USER_NAME=
 NEW_USER_PASSWORD=
 
@@ -33,6 +30,9 @@ request_input() {
 
     while [[ -z "$NEW_USER_NAME" || ! "$NEW_USER_NAME" =~ ^[a-zA-Z0-9_]+$ ]]; do
         read -p "Введите имя нового пользователя (только буквы, цифры и нижние подчеркивания): " NEW_USER_NAME
+        if [[ ! "$NEW_USER_NAME" =~ ^[a-zA-Z0-9_]+$ ]]; then
+            echo "Ошибка: имя пользователя может содержать только латинские буквы, цифры и подчеркивания."
+        fi
     done
 
     while [[ -z "$NEW_USER_PASSWORD" || "${#NEW_USER_PASSWORD}" -lt 12 || ! "$NEW_USER_PASSWORD" =~ [A-Z] || ! "$NEW_USER_PASSWORD" =~ [a-z] || ! "$NEW_USER_PASSWORD" =~ [0-9] || ! "$NEW_USER_PASSWORD" =~ [^a-zA-Z0-9] ]]; do
@@ -47,24 +47,12 @@ request_input() {
     done
 }
 
-# Установка sshpass если не установлен
-check_and_install_sshpass() {
-    if [[ -n "$ADMIN_PASSWORD" && ! command -v sshpass &>/dev/null ]]; then
-        echo "Установка sshpass для автоматического ввода пароля SSH..."
-        sudo apt-get install sshpass -y
-    fi
-}
-
 # Функция для выполнения команд на удалённом или локальном сервере
 execute_commands() {
     local commands="$1"
     if [[ -n "$SERVER_ADDRESS" ]]; then
         echo "Выполнение на удалённом сервере: $SERVER_ADDRESS"
-        if [[ -n "$ADMIN_PASSWORD" ]]; then
-            echo "$ADMIN_PASSWORD" | sshpass ssh -o StrictHostKeyChecking=no $SERVER_ADDRESS "$commands"
-        else
-            ssh -o StrictHostKeyChecking=no $SERVER_ADDRESS "$commands"
-        fi
+        ssh -o StrictHostKeyChecking=no $SERVER_ADDRESS "$commands"
     else
         echo "Выполнение на локальном сервере"
         eval "$commands"
@@ -106,9 +94,6 @@ sudo systemctl restart fail2ban;
 
 # Запрашиваем ввод данных, если они не заполнены
 request_input
-
-# Проверяем и устанавливаем sshpass, если необходимо
-check_and_install_sshpass
 
 # Выполнение команд
 execute_commands "$SETUP_COMMANDS"
