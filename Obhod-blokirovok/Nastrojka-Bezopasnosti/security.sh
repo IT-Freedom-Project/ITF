@@ -13,6 +13,7 @@ declare -A USERS=(
 )
 
 # Вопросы и ответы (можно оставить пустыми для запроса при выполнении скрипта)
+UPDATE_SYSTEM=""  # yes/no
 CHANGE_ROOT_PASSWORD=""  # yes/no
 ROOT_PASSWORD=""
 DISABLE_ROOT_SSH=""  # yes/no
@@ -55,7 +56,7 @@ function validate_password() {
         echo "Пароль должен содержать хотя бы одну цифру."
         return 1
     fi
-    if ! [[ "$password" =~ [\W_] ]]; then
+    if ! [[ "$password" =~ [[:punct:]] ]]; then
         echo "Пароль должен содержать хотя бы один специальный символ."
         return 1
     fi
@@ -80,8 +81,13 @@ function create_user() {
 # Функция для настройки безопасности на VPS
 function secure_vps() {
     # Обновление системы
-    echo "Обновляем систему..."
-    run_command "sudo apt update && sudo apt upgrade -y"
+    if [ -z "$UPDATE_SYSTEM" ]; then
+        read -p "Хотите обновить систему? (yes/no): " UPDATE_SYSTEM
+    fi
+    if [ "$UPDATE_SYSTEM" == "yes" ]; then
+        echo "Обновляем систему..."
+        run_command "sudo apt update && sudo apt upgrade -y"
+    fi
 
     # Изменение пароля root
     if [ -z "$CHANGE_ROOT_PASSWORD" ]; then
@@ -197,7 +203,7 @@ function main() {
         if [ -z "$SSH_HOST" ]; then
             read -p "Введите хост SSH: " SSH_HOST
         fi
-        if [ -z "$SSH_USER" ]; then
+        if [ -z "$SSH_USER" ];then
             read -p "Введите имя пользователя SSH: " SSH_USER
         fi
         if [ -z "$SSH_PASSWORD" ]; then
