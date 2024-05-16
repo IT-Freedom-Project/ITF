@@ -1,101 +1,169 @@
 #!/bin/bash
 
-# Переменные конфигурации
-NEW_SSH_PORT=
-NEW_ROOT_PASSWORD=
-SERVER_ADDRESS=
-NEW_USER_NAME=
-NEW_USER_PASSWORD=
+# Переменные для SSH подключения
+SSH_HOST=""
+SSH_USER=""
+SSH_PORT=22
+SSH_PASSWORD=""
 
-# Функция для запроса данных, если они не предоставлены
-request_input() {
-    while [[ -z "$NEW_SSH_PORT" || ! "$NEW_SSH_PORT" =~ ^[0-9]+$ || "$NEW_SSH_PORT" -lt 1024 || "$NEW_SSH_PORT" -gt 65535 ]]; do
-        read -p "Введите новый порт SSH (1024-65535): " NEW_SSH_PORT
-    done
+# Переменные для создания пользователей
+declare -A USERS=(
+    ["namenewuser1"]="nameuser:passworduser:no"
+    ["namenewuser2"]="newuser:passworduser2:yes"
+)
 
-    while [[ -z "$NEW_ROOT_PASSWORD" || "${#NEW_ROOT_PASSWORD}" -lt 12 || ! "$NEW_ROOT_PASSWORD" =~ [A-Z] || ! "$NEW_ROOT_PASSWORD" =~ [a-z] || ! "$NEW_ROOT_PASSWORD" =~ [0-9] || ! "$NEW_ROOT_PASSWORD" =~ [^a-zA-Z0-9] ]]; do
-        read -s -p "Введите новый пароль для root: " NEW_ROOT_PASSWORD
-        echo
-        read -s -p "Подтвердите новый пароль для root: " root_password_confirm
-        echo
-        if [ "$NEW_ROOT_PASSWORD" != "$root_password_confirm" ]; then
-            echo "Пароли не совпадают, попробуйте еще раз."
-            NEW_ROOT_PASSWORD=""
-        fi
-    done
+# Вопросы и ответы
+CHANGE_ROOT_PASSWORD="yes"  # yes/no
+ROOT_PASSWORD="StrongRootPassword123!"
+DISABLE_ROOT_SSH="yes"  # yes/no
+CHANGE_SSH_PORT="yes"  # yes/no
+NEW_SSH_PORT=2222
+CONFIGURE_UFW="yes"  # yes/no
+CONFIGURE_FAIL2BAN="yes"  # yes/no
 
-    if [[ -z "$SERVER_ADDRESS" ]]; then
-        read -p "Введите адрес удалённого сервера (user@host): " SERVER_ADDRESS
-    fi
-
-    while [[ -z "$NEW_USER_NAME" || ! "$NEW_USER_NAME" =~ ^[a-zA-Z0-9_]+$ ]]; do
-        read -p "Введите имя нового пользователя (только буквы, цифры и нижние подчеркивания): " NEW_USER_NAME
-        if [[ ! "$NEW_USER_NAME" =~ ^[a-zA-Z0-9_]+$ ]]; then
-            echo "Ошибка: имя пользователя может содержать только латинские буквы, цифры и подчеркивания."
-        fi
-    done
-
-    while [[ -z "$NEW_USER_PASSWORD" || "${#NEW_USER_PASSWORD}" -lt 12 || ! "$NEW_USER_PASSWORD" =~ [A-Z] || ! "$NEW_USER_PASSWORD" =~ [a-z] || ! "$NEW_USER_PASSWORD" =~ [0-9] || ! "$NEW_USER_PASSWORD" =~ [^a-zA-Z0-9] ]]; do
-        read -s -p "Введите пароль для нового пользователя: " NEW_USER_PASSWORD
-        echo
-        read -s -p "Подтвердите пароль: " user_password_confirm
-        echo
-        if [ "$NEW_USER_PASSWORD" != "$user_password_confirm" ]; then
-            echo "Пароли не совпадают, попробуйте еще раз."
-            NEW_USER_PASSWORD=""
-        fi
-    done
+# Функция для выполнения команды на удаленной машине через SSH
+function ssh_command() {
+    local cmd=$1
+    sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -p $SSH_PORT "$SSH_USER@$SSH_HOST" "$cmd"
 }
 
-# Функция для выполнения команд на удалённом или локальном сервере
-execute_commands() {
-    local commands="$1"
-    if [[ -n "$SERVER_ADDRESS" ]]; then
-        echo "Выполнение на удалённом сервере: $SERVER_ADDRESS"
-        ssh -o StrictHostKeyChecking=no $SERVER_ADDRESS "$commands"
+# Функция для выполнения команды локально или через SSH
+function run_command() {
+    if [ "$MODE" == "ssh" ]; then
+        ssh_command "$1"
     else
-        echo "Выполнение на локальном сервере"
-        eval "$commands"
+        eval "$1"
     fi
 }
 
-# Скрипт для настройки системы
-SETUP_COMMANDS="
-echo 'Обновление списка пакетов и установленных программ...';
-sudo apt-get update && sudo apt-get upgrade -y;
-echo 'Установка и настройка брандмауэра UFW...';
-sudo apt-get install ufw -y;
-sudo ufw default deny incoming;
-sudo ufw default allow outgoing;
-sudo ufw allow ssh;
-sudo ufw enable;
-sudo sed -i 's/^#*Port .*/Port $NEW_SSH_PORT/' /etc/ssh/sshd_config;
-sudo ufw allow $NEW_SSH_PORT/tcp;
-sudo ufw delete allow 22/tcp;
-sudo service ssh restart;
-echo 'root:$NEW_ROOT_PASSWORD' | sudo chpasswd;
-sudo useradd -m -s /bin/bash $NEW_USER_NAME;
-echo '$NEW_USER_NAME:$NEW_USER_PASSWORD' | sudo chpasswd;
-sudo usermod -aG sudo $NEW_USER_NAME;
-echo '$NEW_USER_NAME ALL=(ALL) NOPASSWD: ALL' | sudo tee /etc/sudoers.d/$NEW_USER_NAME;
-sudo sed -i 's/^PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config;
-sudo service ssh restart;
-sudo apt-get install fail2ban -y;
-sudo systemctl enable fail2ban;
-sudo systemctl start fail2ban;
-echo '[sshd]' | sudo tee /etc/fail2ban/jail.local;
-echo 'enabled = true' | sudo tee -a /etc/fail2ban/jail.local;
-echo 'port    = $NEW_SSH_PORT' | sudo tee -a /etc/fail2ban/jail.local;
-echo 'filter  = sshd' | sudo tee -a /etc/fail2ban/jail.local;
-echo 'logpath = /var/log/auth.log' | sudo tee -a /etc/fail2ban/jail.local;
-echo 'maxretry = 5' | sudo tee -a /etc/fail2ban/jail.local;
-sudo systemctl restart fail2ban;
-"
+# Функция для проверки пароля
+function validate_password() {
+    local password=$1
+    if [[ ${#password} -lt 16 ]]; then
+        echo "Пароль должен быть не менее 16 символов."
+        return 1
+    fi
+    if ! [[ "$password" =~ [a-z] ]]; then
+        echo "Пароль должен содержать хотя бы одну букву нижнего регистра."
+        return 1
+    fi
+    if ! [[ "$password" =~ [A-Z] ]]; then
+        echo "Пароль должен содержать хотя бы одну букву верхнего регистра."
+        return 1
+    fi
+    if ! [[ "$password" =~ [0-9] ]]; then
+        echo "Пароль должен содержать хотя бы одну цифру."
+        return 1
+    fi
+    if ! [[ "$password" =~ [\W_] ]]; then
+        echo "Пароль должен содержать хотя бы один специальный символ."
+        return 1
+    fi
+    return 0
+}
 
-# Запрашиваем ввод данных, если они не заполнены
-request_input
+# Функция для создания пользователя
+function create_user() {
+    local username=$1
+    local password=$2
+    local nopass=$3
 
-# Выполнение команд
-execute_commands "$SETUP_COMMANDS"
+    run_command "sudo adduser --disabled-password --gecos '' $username"
+    run_command "echo '$username:$password' | sudo chpasswd"
+    run_command "sudo usermod -aG sudo $username"
+    if [ "$nopass" == "yes" ]; then
+        run_command "echo '$username ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$username"
+    fi
+    echo "Пользователь $username создан."
+}
 
-echo "Базовая настройка безопасности завершена."
+# Функция для настройки безопасности на VPS
+function secure_vps() {
+    # Обновление системы
+    echo "Обновляем систему..."
+    run_command "sudo apt update && sudo apt upgrade -y"
+
+    # Изменение пароля root
+    if [ "$CHANGE_ROOT_PASSWORD" == "yes" ]; then
+        validate_password "$ROOT_PASSWORD"
+        if [ $? -ne 0 ]; then
+            echo "Неверный пароль для root. Прекращение выполнения."
+            exit 1
+        fi
+        run_command "echo 'root:$ROOT_PASSWORD' | sudo chpasswd"
+        echo "Пароль root успешно изменен."
+    fi
+
+    # Создание новых пользователей
+    for key in "${!USERS[@]}"; do
+        IFS=':' read -r username password nopass <<< "${USERS[$key]}"
+        create_user "$username" "$password" "$nopass"
+    done
+
+    # Отключение входа root по SSH
+    if [ "$DISABLE_ROOT_SSH" == "yes" ]; then
+        run_command "sudo sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config"
+        run_command "sudo systemctl restart sshd"
+        echo "Вход root по SSH отключен."
+    else
+        run_command "sudo sed -i 's/PermitRootLogin no/PermitRootLogin yes/' /etc/ssh/sshd_config"
+        run_command "sudo systemctl restart sshd"
+        echo "Вход root по SSH включен."
+    fi
+
+    # Изменение порта SSH
+    CURRENT_SSH_PORT=22
+    if [ "$CHANGE_SSH_PORT" == "yes" ]; then
+        run_command "sudo sed -i 's/#Port 22/Port $NEW_SSH_PORT/' /etc/ssh/sshd_config"
+        run_command "sudo systemctl restart sshd"
+        echo "Порт SSH изменен на $NEW_SSH_PORT."
+        CURRENT_SSH_PORT=$NEW_SSH_PORT
+    fi
+
+    # Настройка ufw
+    if [ "$CONFIGURE_UFW" == "yes" ]; then
+        run_command "sudo apt install ufw -y"
+        run_command "sudo ufw allow $CURRENT_SSH_PORT/tcp"
+        run_command "sudo ufw enable"
+        echo "ufw настроен и включен."
+    fi
+
+    # Настройка fail2ban
+    if [ "$CONFIGURE_FAIL2BAN" == "yes" ]; then
+        run_command "sudo apt install fail2ban -y"
+        run_command "sudo systemctl enable fail2ban"
+        run_command "sudo systemctl start fail2ban"
+        run_command "sudo bash -c 'cat <<EOT > /etc/fail2ban/jail.local
+[sshd]
+enabled = true
+port = $CURRENT_SSH_PORT
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = 5
+EOT'"
+        run_command "sudo systemctl restart fail2ban"
+        echo "fail2ban установлен и настроен."
+    fi
+}
+
+# Главная функция
+function main() {
+    read -p "Выберите режим работы (local/ssh): " MODE
+
+    if [ "$MODE" == "ssh" ]; then
+        if [ -z "$SSH_HOST" ]; then
+            read -p "Введите хост SSH: " SSH_HOST
+        fi
+        if [ -z "$SSH_USER" ]; then
+            read -p "Введите имя пользователя SSH: " SSH_USER
+        fi
+        if [ -z "$SSH_PASSWORD" ]; then
+            read -s -p "Введите пароль SSH: " SSH_PASSWORD
+            echo
+        fi
+    fi
+
+    secure_vps
+}
+
+main
