@@ -18,7 +18,7 @@ CHANGE_ROOT_PASSWORD=""  # yes/no
 ROOT_PASSWORD=""
 DISABLE_ROOT_SSH=""  # yes/no
 CHANGE_SSH_PORT=""  # yes/no
-NEW_SSH_PORT=22
+NEW_SSH_PORT=""
 CONFIGURE_UFW=""  # yes/no
 CONFIGURE_FAIL2BAN=""  # yes/no
 
@@ -98,6 +98,12 @@ function secure_vps() {
             if [ -z "$ROOT_PASSWORD" ]; then
                 read -s -p "Введите новый пароль для root: " ROOT_PASSWORD
                 echo
+                read -s -p "Повторите новый пароль для root: " ROOT_PASSWORD_CONFIRM
+                echo
+                if [ "$ROOT_PASSWORD" != "$ROOT_PASSWORD_CONFIRM" ]; then
+                    echo "Пароли не совпадают. Попробуйте снова."
+                    continue
+                fi
             fi
             validate_password "$ROOT_PASSWORD"
             if [ $? -eq 0 ]; then
@@ -111,26 +117,30 @@ function secure_vps() {
     fi
 
     # Создание новых пользователей
-    for key in "${!USERS[@]}"; do
-        IFS=':' read -r username password nopass <<< "${USERS[$key]}"
-        if [ -z "$username" ]; then
-            read -p "Введите имя пользователя: " username
+    while true; do
+        read -p "Хотите создать нового пользователя? (yes/no): " CREATE_USER
+        if [ "$CREATE_USER" == "no" ]; then
+            break
         fi
-        if [ -z "$password" ]; then
-            while true; do
-                read -s -p "Введите пароль для пользователя $username: " password
-                echo
-                validate_password "$password"
-                if [ $? -eq 0 ]; then
-                    break
-                else
-                    password=""
-                fi
-            done
-        fi
-        if [ -z "$nopass" ]; then
-            read -p "Разрешить выполнение команд без пароля для $username? (yes/no): " nopass
-        fi
+
+        read -p "Введите имя пользователя: " username
+        while true; do
+            read -s -p "Введите пароль для пользователя $username: " password
+            echo
+            read -s -p "Повторите пароль для пользователя $username: " password_confirm
+            echo
+            if [ "$password" != "$password_confirm" ]; then
+                echo "Пароли не совпадают. Попробуйте снова."
+                continue
+            fi
+            validate_password "$password"
+            if [ $? -eq 0 ]; then
+                break
+            else
+                password=""
+            fi
+        done
+        read -p "Разрешить выполнение команд без пароля для $username? (yes/no): " nopass
         create_user "$username" "$password" "$nopass"
     done
 
