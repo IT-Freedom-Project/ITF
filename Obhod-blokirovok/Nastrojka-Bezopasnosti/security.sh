@@ -1,25 +1,25 @@
 #!/bin/bash
 
-# Переменные для SSH подключения
+# Переменные для SSH подключения (можно оставить пустыми для запроса при выполнении скрипта)
 SSH_HOST=""
 SSH_USER=""
 SSH_PORT=22
 SSH_PASSWORD=""
 
-# Переменные для создания пользователей
+# Переменные для создания пользователей (можно оставить пустыми для запроса при выполнении скрипта)
 declare -A USERS=(
-    ["namenewuser1"]="nameuser:passworduser:no"
-    ["namenewuser2"]="newuser:passworduser2:yes"
+    # ["namenewuser1"]="nameuser:passworduser:no"
+    # ["namenewuser2"]="newuser:passworduser2:yes"
 )
 
-# Вопросы и ответы
-CHANGE_ROOT_PASSWORD="yes"  # yes/no
-ROOT_PASSWORD="StrongRootPassword123!"
-DISABLE_ROOT_SSH="yes"  # yes/no
-CHANGE_SSH_PORT="yes"  # yes/no
-NEW_SSH_PORT=2222
-CONFIGURE_UFW="yes"  # yes/no
-CONFIGURE_FAIL2BAN="yes"  # yes/no
+# Вопросы и ответы (можно оставить пустыми для запроса при выполнении скрипта)
+CHANGE_ROOT_PASSWORD=""  # yes/no
+ROOT_PASSWORD=""
+DISABLE_ROOT_SSH=""  # yes/no
+CHANGE_SSH_PORT=""  # yes/no
+NEW_SSH_PORT=22
+CONFIGURE_UFW=""  # yes/no
+CONFIGURE_FAIL2BAN=""  # yes/no
 
 # Функция для выполнения команды на удаленной машине через SSH
 function ssh_command() {
@@ -84,12 +84,22 @@ function secure_vps() {
     run_command "sudo apt update && sudo apt upgrade -y"
 
     # Изменение пароля root
+    if [ -z "$CHANGE_ROOT_PASSWORD" ]; then
+        read -p "Хотите изменить пароль root? (yes/no): " CHANGE_ROOT_PASSWORD
+    fi
     if [ "$CHANGE_ROOT_PASSWORD" == "yes" ]; then
-        validate_password "$ROOT_PASSWORD"
-        if [ $? -ne 0 ]; then
-            echo "Неверный пароль для root. Прекращение выполнения."
-            exit 1
-        fi
+        while true; do
+            if [ -z "$ROOT_PASSWORD" ]; then
+                read -s -p "Введите новый пароль для root: " ROOT_PASSWORD
+                echo
+            fi
+            validate_password "$ROOT_PASSWORD"
+            if [ $? -eq 0 ]; then
+                break
+            else
+                ROOT_PASSWORD=""
+            fi
+        done
         run_command "echo 'root:$ROOT_PASSWORD' | sudo chpasswd"
         echo "Пароль root успешно изменен."
     fi
@@ -97,10 +107,31 @@ function secure_vps() {
     # Создание новых пользователей
     for key in "${!USERS[@]}"; do
         IFS=':' read -r username password nopass <<< "${USERS[$key]}"
+        if [ -z "$username" ]; then
+            read -p "Введите имя пользователя: " username
+        fi
+        if [ -z "$password" ]; then
+            while true; do
+                read -s -p "Введите пароль для пользователя $username: " password
+                echo
+                validate_password "$password"
+                if [ $? -eq 0 ]; then
+                    break
+                else
+                    password=""
+                fi
+            done
+        fi
+        if [ -z "$nopass" ]; then
+            read -p "Разрешить выполнение команд без пароля для $username? (yes/no): " nopass
+        fi
         create_user "$username" "$password" "$nopass"
     done
 
     # Отключение входа root по SSH
+    if [ -z "$DISABLE_ROOT_SSH" ]; then
+        read -p "Хотите отключить вход root по SSH? (yes/no): " DISABLE_ROOT_SSH
+    fi
     if [ "$DISABLE_ROOT_SSH" == "yes" ]; then
         run_command "sudo sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config"
         run_command "sudo systemctl restart sshd"
@@ -113,7 +144,13 @@ function secure_vps() {
 
     # Изменение порта SSH
     CURRENT_SSH_PORT=22
+    if [ -z "$CHANGE_SSH_PORT" ]; then
+        read -p "Хотите изменить порт SSH? (yes/no): " CHANGE_SSH_PORT
+    fi
     if [ "$CHANGE_SSH_PORT" == "yes" ]; then
+        if [ -z "$NEW_SSH_PORT" ]; then
+            read -p "Введите новый порт SSH: " NEW_SSH_PORT
+        fi
         run_command "sudo sed -i 's/#Port 22/Port $NEW_SSH_PORT/' /etc/ssh/sshd_config"
         run_command "sudo systemctl restart sshd"
         echo "Порт SSH изменен на $NEW_SSH_PORT."
@@ -121,6 +158,9 @@ function secure_vps() {
     fi
 
     # Настройка ufw
+    if [ -z "$CONFIGURE_UFW" ]; then
+        read -p "Хотите настроить ufw? (yes/no): " CONFIGURE_UFW
+    fi
     if [ "$CONFIGURE_UFW" == "yes" ]; then
         run_command "sudo apt install ufw -y"
         run_command "sudo ufw allow $CURRENT_SSH_PORT/tcp"
@@ -129,6 +169,9 @@ function secure_vps() {
     fi
 
     # Настройка fail2ban
+    if [ -z "$CONFIGURE_FAIL2BAN" ]; then
+        read -p "Хотите настроить fail2ban? (yes/no): " CONFIGURE_FAIL2BAN
+    fi
     if [ "$CONFIGURE_FAIL2BAN" == "yes" ]; then
         run_command "sudo apt install fail2ban -y"
         run_command "sudo systemctl enable fail2ban"
