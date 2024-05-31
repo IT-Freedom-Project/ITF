@@ -98,19 +98,20 @@ function secure_vps() {
             if [ -z "$ROOT_PASSWORD" ]; then
                 read -s -p "Введите новый пароль для root: " ROOT_PASSWORD
                 echo
+                validate_password "$ROOT_PASSWORD"
+                if [ $? -ne 0 ]; then
+                    ROOT_PASSWORD=""
+                    continue
+                fi
                 read -s -p "Повторите новый пароль для root: " ROOT_PASSWORD_CONFIRM
                 echo
                 if [ "$ROOT_PASSWORD" != "$ROOT_PASSWORD_CONFIRM" ]; then
                     echo "Пароли не совпадают. Попробуйте снова."
+                    ROOT_PASSWORD=""
                     continue
                 fi
             fi
-            validate_password "$ROOT_PASSWORD"
-            if [ $? -eq 0 ]; then
-                break
-            else
-                ROOT_PASSWORD=""
-            fi
+            break
         done
         run_command "echo 'root:$ROOT_PASSWORD' | sudo chpasswd"
         echo "Пароль root успешно изменен."
@@ -127,18 +128,19 @@ function secure_vps() {
         while true; do
             read -s -p "Введите пароль для пользователя $username: " password
             echo
-            read -s -p "Повторите пароль для пользователя $username: " password_confirm
-            echo
-            if [ "$password" != "$password_confirm" ]; then
-                echo "Пароли не совпадают. Попробуйте снова."
+            validate_password "$password"
+            if [ $? -ne 0 ]; then
+                password=""
                 continue
             fi
-            validate_password "$password"
-            if [ $? -eq 0 ]; then
-                break
-            else
+            read -s -p "Повторите пароль для пользователя $username: " password_confirm
+            echo
+            if [ "$password" != "$password_confirm" ];then
+                echo "Пароли не совпадают. Попробуйте снова."
                 password=""
+                continue
             fi
+            break
         done
         read -p "Разрешить выполнение команд без пароля для $username? (yes/no): " nopass
         create_user "$username" "$password" "$nopass"
@@ -216,7 +218,7 @@ function main() {
         if [ -z "$SSH_USER" ];then
             read -p "Введите имя пользователя SSH: " SSH_USER
         fi
-        if [ -z "$SSH_PASSWORD" ]; then
+        if [ -z "$SSH_PASSWORD" ];then
             read -s -p "Введите пароль SSH: " SSH_PASSWORD
             echo
         fi
