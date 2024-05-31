@@ -86,6 +86,41 @@ function validate_password() {
     return 0
 }
 
+# Функция для изменения пароля пользователя
+function change_user_password() {
+    local username=$1
+    while true; do
+        read -s -p "Введите новый пароль для пользователя $username: " password
+        echo
+        validate_password "$password"
+        if [ $? -ne 0 ]; then
+            password=""
+            continue
+        fi
+        read -s -p "Повторите новый пароль для пользователя $username: " password_confirm
+        echo
+        if [ "$password" != "$password_confirm" ]; then
+            echo "Пароли не совпадают. Попробуйте снова."
+            password=""
+            continue
+        fi
+        break
+    done
+    run_command "echo '$username:$password' | sudo chpasswd"
+    if [ $? -eq 0 ]; then
+        echo "Пароль для пользователя $username успешно изменен."
+    else
+        echo "Не удалось изменить пароль для пользователя $username."
+    fi
+}
+
+# Функция для добавления пользователя в группу для выполнения команд без пароля
+function add_user_nopasswd() {
+    local username=$1
+    run_command "echo '$username ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$username"
+    echo "Пользователь $username добавлен в группу для выполнения команд без пароля."
+}
+
 # Функция для создания пользователя
 function create_user() {
     local username=$1
@@ -96,7 +131,7 @@ function create_user() {
     run_command "echo '$username:$password' | sudo chpasswd"
     run_command "sudo usermod -aG sudo $username"
     if [ "$nopass" == "yes" ]; then
-        run_command "echo '$username ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$username"
+        add_user_nopasswd "$username"
     fi
     echo "Пользователь $username создан."
 }
@@ -159,25 +194,37 @@ function secure_vps() {
             fi
         done
 
-        while true; do
-            read -s -p "Введите пароль для пользователя $username: " password
-            echo
-            validate_password "$password"
-            if [ $? -ne 0 ]; then
-                password=""
-                continue
+        if id "$username" &>/dev/null; then
+            echo "Пользователь $username уже существует."
+            read -p "Хотите изменить пароль для пользователя $username? (yes/no): " CHANGE_USER_PASSWORD
+            if [ "$CHANGE_USER_PASSWORD" == "yes" ]; then
+                change_user_password "$username"
             fi
-            read -s -p "Повторите пароль для пользователя $username: " password_confirm
-            echo
-            if [ "$password" != "$password_confirm" ]; then
-                echo "Пароли не совпадают. Попробуйте снова."
-                password=""
-                continue
+            read -p "Хотите добавить пользователя $username в группу для выполнения команд без пароля? (yes/no): " ADD_USER_NOPASSWD
+            if [ "$ADD_USER_NOPASSWD" == "yes" ]; then
+                add_user_nopasswd "$username"
             fi
-            break
-        done
-        read -p "Разрешить выполнение команд без пароля для $username? (yes/no): " nopass
-        create_user "$username" "$password" "$nopass"
+        else
+            while true; do
+                read -s -p "Введите пароль для пользователя $username: " password
+                echo
+                validate_password "$password"
+                if [ $? -ne 0 ]; then
+                    password=""
+                    continue
+                fi
+                read -s -p "Повторите пароль для пользователя $username: " password_confirm
+                echo
+                if [ "$password" != "$password_confirm" ]; then
+                    echo "Пароли не совпадают. Попробуйте снова."
+                    password=""
+                    continue
+                fi
+                break
+            done
+            read -p "Разрешить выполнение команд без пароля для $username? (yes/no): " nopass
+            create_user "$username" "$password" "$nopass"
+        fi
     done
 
     # Отключение входа root по SSH
