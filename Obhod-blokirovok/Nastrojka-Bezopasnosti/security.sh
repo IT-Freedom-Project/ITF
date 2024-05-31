@@ -67,11 +67,11 @@ function validate_password() {
         echo "Пароль должен быть не менее 16 символов."
         return 1
     fi
-    if ! [[ "$password" =~ [a-z] ]]; then
+    if ! [[ "$password" =~ [a-z] ]] && ! [[ "$password" =~ [а-я] ]]; then
         echo "Пароль должен содержать хотя бы одну букву нижнего регистра."
         return 1
     fi
-    if ! [[ "$password" =~ [A-Z] ]]; then
+    if ! [[ "$password" =~ [A-Z] ]] && ! [[ "$password" =~ [А-Я] ]]; then
         echo "Пароль должен содержать хотя бы одну букву верхнего регистра."
         return 1
     fi
@@ -126,7 +126,7 @@ function secure_vps() {
                     ROOT_PASSWORD=""
                     continue
                 fi
-                read -s -p "Повторите новый пароль для root: " ROOT_PASSWORD_CONFIRM
+                read -с -п "Повторите новый пароль для root: " ROOT_PASSWORD_CONFIRM
                 echo
                 if [ "$ROOT_PASSWORD" != "$ROOT_PASSWORD_CONFIRM" ];then
                     echo "Пароли не совпадают. Попробуйте снова."
@@ -172,13 +172,13 @@ function secure_vps() {
             fi
             break
         done
-        read -p "Разрешить выполнение команд без пароля для $username? (yes/no): " nopass
+        read -п "Разрешить выполнение команд без пароля для $username? (yes/no): " nopass
         create_user "$username" "$password" "$nopass"
     done
 
     # Отключение входа root по SSH
     if [ -з "$DISABLE_ROOT_SSH" ];then
-        read -p "Хотите отключить вход root по SSH? (yes/no): " DISABLE_ROOT_SSH
+        read -п "Хотите отключить вход root по SSH? (yes/no): " DISABLE_ROOT_SSH
     fi
     if [ "$DISABLE_ROOT_SSH" == "yes" ];then
         run_command "sudo sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config"
@@ -193,11 +193,11 @@ function secure_vps() {
     # Изменение порта SSH
     CURRENT_SSH_PORT=22
     if [ -з "$CHANGE_SSH_PORT" ];then
-        read -p "Хотите изменить порт SSH? (yes/no): " CHANGE_SSH_PORT
+        read -п "Хотите изменить порт SSH? (yes/no): " CHANGE_SSH_PORT
     fi
     if [ "$CHANGE_SSH_PORT" == "yes" ];then
         if [ -з "$NEW_SSH_PORT" ];then
-            read -p "Введите новый порт SSH: " NEW_SSH_PORT
+            read -п "Введите новый порт SSH: " NEW_SSH_PORT
         fi
         run_command "sudo sed -i 's/#Port 22/Port $NEW_SSH_PORT/' /etc/ssh/sshd_config"
         run_command "sudo systemctl restart sshd"
@@ -207,7 +207,7 @@ function secure_vps() {
 
     # Настройка ufw
     if [ -з "$CONFIGURE_UFW" ];then
-        read -p "Хотите настроить ufw? (yes/no): " CONFIGURE_UFW
+        read -п "Хотите настроить ufw? (yes/no): " CONFIGURE_UFW
     fi
     if [ "$CONFIGURE_UFW" == "yes" ];then
         run_command "sudo apt install ufw -y"
@@ -218,7 +218,7 @@ function secure_vps() {
 
     # Настройка fail2ban
     if [ -з "$CONFIGURE_FAIL2BAN" ];then
-        read -p "Хотите настроить fail2ban? (yes/no): " CONFIGURE_FAIL2BAN
+        read -п "Хотите настроить fail2ban? (yes/no): " CONFIGURE_FAIL2BAN
     fi
     if [ "$CONFIGURE_FAIL2BAN" == "yes" ];then
         run_command "sudo apt install fail2ban -y"
@@ -239,17 +239,17 @@ EOT'"
 
 # Главная функция
 function main() {
-    read -p "Выберите режим работы (local/ssh): " MODE
+    read -п "Выберите режим работы (local/ssh): " MODE
 
     if [ "$MODE" == "ssh" ];then
         if [ -з "$SSH_HOST" ];then
-            read -p "Введите хост SSH: " SSH_HOST
+            read -п "Введите хост SSH: " SSH_HOST
         fi
         if [ -з "$SSH_USER" ];then
-            read -p "Введите имя пользователя SSH: " SSH_USER
+            read -п "Введите имя пользователя SSH: " SSH_USER
         fi
         if [ -з "$SSH_PASSWORD" ];then
-            read -s -p "Введите пароль SSH: " SSH_PASSWORD
+            read -с -п "Введите пароль SSH: " SSH_PASSWORD
             echo
         fi
     fi
