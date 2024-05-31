@@ -118,17 +118,17 @@ function secure_vps() {
     fi
     if [ "$CHANGE_ROOT_PASSWORD" == "yes" ]; then
         while true; do
-            if [ -з "$ROOT_PASSWORD" ]; then
+            if [ -z "$ROOT_PASSWORD" ]; then
                 read -s -p "Введите новый пароль для root: " ROOT_PASSWORD
                 echo
                 validate_password "$ROOT_PASSWORD"
-                if [ $? -ne 0 ];then
+                if [ $? -ne 0 ]; then
                     ROOT_PASSWORD=""
                     continue
                 fi
-                read -с -п "Повторите новый пароль для root: " ROOT_PASSWORD_CONFIRM
+                read -s -p "Повторите новый пароль для root: " ROOT_PASSWORD_CONFIRM
                 echo
-                if [ "$ROOT_PASSWORD" != "$ROOT_PASSWORD_CONFIRM" ];then
+                if [ "$ROOT_PASSWORD" != "$ROOT_PASSWORD_CONFIRM" ]; then
                     echo "Пароли не совпадают. Попробуйте снова."
                     ROOT_PASSWORD=""
                     continue
@@ -137,20 +137,24 @@ function secure_vps() {
             break
         done
         run_command "echo 'root:$ROOT_PASSWORD' | sudo chpasswd"
-        echo "Пароль root успешно изменен."
+        if [ $? -eq 0 ]; then
+            echo "Пароль root успешно изменен."
+        else
+            echo "Не удалось изменить пароль root."
+        fi
     fi
 
     # Создание новых пользователей
     while true; do
         read -p "Хотите создать нового пользователя? (yes/no): " CREATE_USER
-        if [ "$CREATE_USER" == "no" ];then
+        if [ "$CREATE_USER" == "no" ]; then
             break
         fi
 
         while true; do
             read -p "Введите имя пользователя: " username
             validate_username "$username"
-            if [ $? -eq 0 ];then
+            if [ $? -eq 0 ]; then
                 break
             fi
         done
@@ -159,28 +163,28 @@ function secure_vps() {
             read -s -p "Введите пароль для пользователя $username: " password
             echo
             validate_password "$password"
-            if [ $? -ne 0 ];then
+            if [ $? -ne 0 ]; then
                 password=""
                 continue
             fi
             read -s -p "Повторите пароль для пользователя $username: " password_confirm
             echo
-            if [ "$password" != "$password_confirm" ];then
+            if [ "$password" != "$password_confirm" ]; then
                 echo "Пароли не совпадают. Попробуйте снова."
                 password=""
                 continue
             fi
             break
         done
-        read -п "Разрешить выполнение команд без пароля для $username? (yes/no): " nopass
+        read -p "Разрешить выполнение команд без пароля для $username? (yes/no): " nopass
         create_user "$username" "$password" "$nopass"
     done
 
     # Отключение входа root по SSH
-    if [ -з "$DISABLE_ROOT_SSH" ];then
-        read -п "Хотите отключить вход root по SSH? (yes/no): " DISABLE_ROOT_SSH
+    if [ -z "$DISABLE_ROOT_SSH" ]; then
+        read -p "Хотите отключить вход root по SSH? (yes/no): " DISABLE_ROOT_SSH
     fi
-    if [ "$DISABLE_ROOT_SSH" == "yes" ];then
+    if [ "$DISABLE_ROOT_SSH" == "yes" ]; then
         run_command "sudo sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config"
         run_command "sudo systemctl restart sshd"
         echo "Вход root по SSH отключен."
@@ -192,12 +196,12 @@ function secure_vps() {
 
     # Изменение порта SSH
     CURRENT_SSH_PORT=22
-    if [ -з "$CHANGE_SSH_PORT" ];then
-        read -п "Хотите изменить порт SSH? (yes/no): " CHANGE_SSH_PORT
+    if [ -z "$CHANGE_SSH_PORT" ]; then
+        read -p "Хотите изменить порт SSH? (yes/no): " CHANGE_SSH_PORT
     fi
-    if [ "$CHANGE_SSH_PORT" == "yes" ];then
-        if [ -з "$NEW_SSH_PORT" ];then
-            read -п "Введите новый порт SSH: " NEW_SSH_PORT
+    if [ "$CHANGE_SSH_PORT" == "yes" ]; then
+        if [ -z "$NEW_SSH_PORT" ]; then
+            read -p "Введите новый порт SSH: " NEW_SSH_PORT
         fi
         run_command "sudo sed -i 's/#Port 22/Port $NEW_SSH_PORT/' /etc/ssh/sshd_config"
         run_command "sudo systemctl restart sshd"
@@ -206,10 +210,10 @@ function secure_vps() {
     fi
 
     # Настройка ufw
-    if [ -з "$CONFIGURE_UFW" ];then
-        read -п "Хотите настроить ufw? (yes/no): " CONFIGURE_UFW
+    if [ -z "$CONFIGURE_UFW" ]; then
+        read -p "Хотите настроить ufw? (yes/no): " CONFIGURE_UFW
     fi
-    if [ "$CONFIGURE_UFW" == "yes" ];then
+    if [ "$CONFIGURE_UFW" == "yes" ]; then
         run_command "sudo apt install ufw -y"
         run_command "sudo ufw allow $CURRENT_SSH_PORT/tcp"
         run_command "sudo ufw enable"
@@ -217,10 +221,10 @@ function secure_vps() {
     fi
 
     # Настройка fail2ban
-    if [ -з "$CONFIGURE_FAIL2BAN" ];then
-        read -п "Хотите настроить fail2ban? (yes/no): " CONFIGURE_FAIL2BAN
+    if [ -z "$CONFIGURE_FAIL2BAN" ]; then
+        read -p "Хотите настроить fail2ban? (yes/no): " CONFIGURE_FAIL2BAN
     fi
-    if [ "$CONFIGURE_FAIL2BAN" == "yes" ];then
+    if [ "$CONFIGURE_FAIL2BAN" == "yes" ]; then
         run_command "sudo apt install fail2ban -y"
         run_command "sudo systemctl enable fail2ban"
         run_command "sudo systemctl start fail2ban"
@@ -239,17 +243,17 @@ EOT'"
 
 # Главная функция
 function main() {
-    read -п "Выберите режим работы (local/ssh): " MODE
+    read -p "Выберите режим работы (local/ssh): " MODE
 
-    if [ "$MODE" == "ssh" ];then
-        if [ -з "$SSH_HOST" ];then
-            read -п "Введите хост SSH: " SSH_HOST
+    if [ "$MODE" == "ssh" ]; then
+        if [ -z "$SSH_HOST" ]; then
+            read -p "Введите хост SSH: " SSH_HOST
         fi
-        if [ -з "$SSH_USER" ];then
-            read -п "Введите имя пользователя SSH: " SSH_USER
+        if [ -z "$SSH_USER" ]; then
+            read -p "Введите имя пользователя SSH: " SSH_USER
         fi
-        if [ -з "$SSH_PASSWORD" ];then
-            read -с -п "Введите пароль SSH: " SSH_PASSWORD
+        if [ -z "$SSH_PASSWORD" ]; then
+            read -s -p "Введите пароль SSH: " SSH_PASSWORD
             echo
         fi
     fi
