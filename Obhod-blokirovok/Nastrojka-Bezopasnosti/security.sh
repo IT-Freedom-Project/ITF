@@ -18,7 +18,7 @@ CHANGE_ROOT_PASSWORD=""  # yes/no
 ROOT_PASSWORD=""
 DISABLE_ROOT_SSH=""  # yes/no
 CHANGE_SSH_PORT=""  # yes/no
-NEW_SSH_PORT=""
+NEW_SSH_PORT=22
 CONFIGURE_UFW=""  # yes/no
 CONFIGURE_FAIL2BAN=""  # yes/no
 
@@ -86,7 +86,7 @@ function secure_vps() {
     fi
     if [ "$UPDATE_SYSTEM" == "yes" ]; then
         echo "Обновляем систему..."
-        run_command "sudo apt update && sudo apt upgrade -y"
+        run_command "sudo DEBIAN_FRONTEND=noninteractive apt update && sudo DEBIAN_FRONTEND=noninteractive apt upgrade -yq"
     fi
 
     # Изменение пароля root
