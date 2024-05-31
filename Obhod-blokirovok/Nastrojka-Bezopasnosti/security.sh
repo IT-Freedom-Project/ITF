@@ -22,6 +22,9 @@ NEW_SSH_PORT=22
 CONFIGURE_UFW=""  # yes/no
 CONFIGURE_FAIL2BAN=""  # yes/no
 
+# Зарезервированные имена
+RESERVED_USERNAMES=(root bin daemon adm lp sync shutdown halt mail news uucp operator games ftp nobody systemd-timesync systemd-network systemd-resolve systemd-bus-proxy sys log uuidd)
+
 # Функция для выполнения команды на удаленной машине через SSH
 function ssh_command() {
     local cmd=$1
@@ -48,6 +51,12 @@ function validate_username() {
         echo "Имя пользователя должно начинаться с буквы или подчеркивания, и содержать только строчные буквы, цифры, дефисы и подчеркивания."
         return 1
     fi
+    for reserved in "${RESERVED_USERNAMES[@]}"; do
+        if [[ "$username" == "$reserved" ]]; then
+            echo "Имя пользователя '$username' является зарезервированным."
+            return 1
+        fi
+    done
     return 0
 }
 
@@ -104,7 +113,7 @@ function secure_vps() {
     fi
 
     # Изменение пароля root
-    if [ -z "$CHANGE_ROOT_PASSWORD" ]; then
+    if [ -z "$CHANGE_ROOT_PASSWORD" ];then
         read -p "Хотите изменить пароль root? (yes/no): " CHANGE_ROOT_PASSWORD
     fi
     if [ "$CHANGE_ROOT_PASSWORD" == "yes" ]; then
@@ -156,7 +165,7 @@ function secure_vps() {
             fi
             read -s -p "Повторите пароль для пользователя $username: " password_confirm
             echo
-            if [ "$password" != "$password_confirm" ]; then
+            if [ "$password" != "$password_confirm" ];then
                 echo "Пароли не совпадают. Попробуйте снова."
                 password=""
                 continue
@@ -239,7 +248,7 @@ function main() {
         if [ -z "$SSH_USER" ];then
             read -p "Введите имя пользователя SSH: " SSH_USER
         fi
-        if [ -z "$SSH_PASSWORD" ];then
+        if [ -з "$SSH_PASSWORD" ];then
             read -s -p "Введите пароль SSH: " SSH_PASSWORD
             echo
         fi
