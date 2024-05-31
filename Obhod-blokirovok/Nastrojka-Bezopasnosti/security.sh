@@ -37,6 +37,20 @@ function run_command() {
     fi
 }
 
+# Функция для проверки имени пользователя
+function validate_username() {
+    local username=$1
+    if [[ ${#username} -lt 1 || ${#username} -gt 32 ]]; then
+        echo "Имя пользователя должно быть от 1 до 32 символов."
+        return 1
+    fi
+    if ! [[ "$username" =~ ^[a-z_][a-z0-9_-]*$ ]]; then
+        echo "Имя пользователя должно начинаться с буквы или подчеркивания, и содержать только строчные буквы, цифры, дефисы и подчеркивания."
+        return 1
+    fi
+    return 0
+}
+
 # Функция для проверки пароля
 function validate_password() {
     local password=$1
@@ -124,7 +138,14 @@ function secure_vps() {
             break
         fi
 
-        read -p "Введите имя пользователя: " username
+        while true; do
+            read -p "Введите имя пользователя: " username
+            validate_username "$username"
+            if [ $? -eq 0 ]; then
+                break
+            fi
+        done
+
         while true; do
             read -s -p "Введите пароль для пользователя $username: " password
             echo
@@ -135,7 +156,7 @@ function secure_vps() {
             fi
             read -s -p "Повторите пароль для пользователя $username: " password_confirm
             echo
-            if [ "$password" != "$password_confirm" ];then
+            if [ "$password" != "$password_confirm" ]; then
                 echo "Пароли не совпадают. Попробуйте снова."
                 password=""
                 continue
