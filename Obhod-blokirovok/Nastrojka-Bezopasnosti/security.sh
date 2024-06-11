@@ -18,7 +18,7 @@ CHANGE_ROOT_PASSWORD=""  # yes/no
 ROOT_PASSWORD=""
 DISABLE_ROOT_SSH=""  # yes/no
 CHANGE_SSH_PORT=""  # yes/no
-NEW_SSH_PORT=22
+NEW_SSH_PORT=""
 CONFIGURE_UFW=""  # yes/no
 CONFIGURE_FAIL2BAN=""  # yes/no
 
@@ -151,8 +151,8 @@ function secure_vps() {
     fi
     if [ "$UPDATE_SYSTEM" == "yes" ]; then
         echo "Обновляем систему..."
-        run_command "sudo DEBIAN_FRONTEND=noninteractive apt update && sudo DEBIAN_FRONTEND=noninteractive apt upgrade -yq"
-        # Автоматически перезагружаем все необходимые службы
+        run_command "sudo apt update && sudo apt install -y unattended-upgrades"
+        run_command "sudo unattended-upgrades -v"
         run_command "sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' upgrade -yq"
     fi
 
@@ -232,7 +232,7 @@ function secure_vps() {
                 fi
                 read -s -p "Повторите пароль для пользователя $username: " password_confirm
                 echo
-                if [ "$password" != "$password_confirm" ]; then
+                if [ "$password" != "$password_confirm" ];then
                     echo "Пароли не совпадают. Попробуйте снова."
                     password=""
                     continue
