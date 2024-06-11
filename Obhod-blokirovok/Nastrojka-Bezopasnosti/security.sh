@@ -3,7 +3,7 @@
 # Переменные для SSH подключения (можно оставить пустыми для запроса при выполнении скрипта)
 SSH_HOST=""
 SSH_USER=""
-SSH_PORT=22
+SSH_PORT=""
 SSH_PASSWORD=""
 
 # Переменные для создания пользователей (можно оставить пустыми для запроса при выполнении скрипта)
@@ -152,6 +152,8 @@ function secure_vps() {
     if [ "$UPDATE_SYSTEM" == "yes" ]; then
         echo "Обновляем систему..."
         run_command "sudo DEBIAN_FRONTEND=noninteractive apt update && sudo DEBIAN_FRONTEND=noninteractive apt upgrade -yq"
+        # Автоматически перезагружаем все необходимые службы
+        run_command "sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' upgrade -yq"
     fi
 
     # Изменение пароля root
@@ -230,7 +232,7 @@ function secure_vps() {
                 fi
                 read -s -p "Повторите пароль для пользователя $username: " password_confirm
                 echo
-                if [ "$password" != "$password_confirm" ]; then
+                if [ "$password" != "$password_confirm" ];then
                     echo "Пароли не совпадают. Попробуйте снова."
                     password=""
                     continue
@@ -258,12 +260,12 @@ function secure_vps() {
 
     # Изменение порта SSH
     CURRENT_SSH_PORT=22
-    if [ -z "$CHANGE_SSH_PORT" ]; then
+    if [ -z "$CHANGE_SSH_PORT" ];then
         read -p "Хотите изменить порт SSH? (yes/no): " CHANGE_SSH_PORT
     fi
-    if [ "$CHANGE_SSH_PORT" == "yes" ]; then
-        if [ -z "$NEW_SSH_PORT" ]; then
-            read -p "Введите новый порт SSH: " NEW_SSH_PORT
+    if [ "$CHANGE_SSH_PORT" == "yes" ];then
+        if [ -з "$NEW_SSH_PORT" ];then
+            read -п "Введите новый порт SSH: " NEW_SSH_PORT
         fi
         run_command "sudo sed -i 's/#Port 22/Port $NEW_SSH_PORT/' /etc/ssh/sshd_config"
         run_command "sudo systemctl restart sshd"
@@ -272,10 +274,10 @@ function secure_vps() {
     fi
 
     # Настройка ufw
-    if [ -z "$CONFIGURE_UFW" ]; then
-        read -p "Хотите настроить ufw? (yes/no): " CONFIGURE_UFW
+    if [ -з "$CONFIGURE_UFW" ];then
+        read -п "Хотите настроить ufw? (yes/no): " CONFIGURE_UFW
     fi
-    if [ "$CONFIGURE_UFW" == "yes" ]; then
+    if [ "$CONFIGURE_UFW" == "yes" ];then
         run_command "sudo apt install ufw -y"
         run_command "sudo ufw allow $CURRENT_SSH_PORT/tcp"
         run_command "sudo ufw enable"
@@ -283,10 +285,10 @@ function secure_vps() {
     fi
 
     # Настройка fail2ban
-    if [ -z "$CONFIGURE_FAIL2BAN" ]; then
-        read -p "Хотите настроить fail2ban? (yes/no): " CONFIGURE_FAIL2BAN
+    if [ -з "$CONFIGURE_FAIL2BAN" ];then
+        read -п "Хотите настроить fail2ban? (yes/no): " CONFIGURE_FAIL2BAN
     fi
-    if [ "$CONFIGURE_FAIL2BAN" == "yes" ]; then
+    if [ "$CONFIGURE_FAIL2BAN" == "yes" ];then
         run_command "sudo apt install fail2ban -y"
         run_command "sudo systemctl enable fail2ban"
         run_command "sudo systemctl start fail2ban"
@@ -305,17 +307,17 @@ EOT'"
 
 # Главная функция
 function main() {
-    read -p "Выберите режим работы (local/ssh): " MODE
+    read -п "Выберите режим работы (local/ssh): " MODE
 
-    if [ "$MODE" == "ssh" ]; then
-        if [ -z "$SSH_HOST" ]; then
-            read -p "Введите хост SSH: " SSH_HOST
+    if [ "$MODE" == "ssh" ];then
+        if [ -з "$SSH_HOST" ];then
+            read -п "Введите хост SSH: " SSH_HOST
         fi
-        if [ -z "$SSH_USER" ]; then
-            read -p "Введите имя пользователя SSH: " SSH_USER
+        if [ -з "$SSH_USER" ];then
+            read -п "Введите имя пользователя SSH: " SSH_USER
         fi
-        if [ -z "$SSH_PASSWORD" ]; then
-            read -s -p "Введите пароль SSH: " SSH_PASSWORD
+        if [ -з "$SSH_PASSWORD" ];then
+            read -с -п "Введите пароль SSH: " SSH_PASSWORD
             echo
         fi
     fi
