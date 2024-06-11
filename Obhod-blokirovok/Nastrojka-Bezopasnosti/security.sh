@@ -121,6 +121,13 @@ function add_user_nopasswd() {
     echo "Пользователь $username добавлен в группу для выполнения команд без пароля."
 }
 
+# Функция для удаления пользователя из группы для выполнения команд без пароля
+function remove_user_nopasswd() {
+    local username=$1
+    run_command "sudo rm -f /etc/sudoers.d/$username"
+    echo "Пользователь $username исключен из группы для выполнения команд без пароля."
+}
+
 # Функция для создания пользователя
 function create_user() {
     local username=$1
@@ -200,9 +207,17 @@ function secure_vps() {
             if [ "$CHANGE_USER_PASSWORD" == "yes" ]; then
                 change_user_password "$username"
             fi
-            read -p "Хотите добавить пользователя $username в группу для выполнения команд без пароля? (yes/no): " ADD_USER_NOPASSWD
-            if [ "$ADD_USER_NOPASSWD" == "yes" ]; then
-                add_user_nopasswd "$username"
+
+            if sudo grep -q "$username ALL=(ALL) NOPASSWD:ALL" /etc/sudoers.d/*; then
+                read -p "Хотите исключить пользователя $username из группы для выполнения команд без пароля? (yes/no): " REMOVE_USER_NOPASSWD
+                if [ "$REMOVE_USER_NOPASSWD" == "yes" ]; then
+                    remove_user_nopasswd "$username"
+                fi
+            else
+                read -p "Хотите добавить пользователя $username в группу для выполнения команд без пароля? (yes/no): " ADD_USER_NOPASSWD
+                if [ "$ADD_USER_NOPASSWD" == "yes" ]; then
+                    add_user_nopasswd "$username"
+                fi
             fi
         else
             while true; do
