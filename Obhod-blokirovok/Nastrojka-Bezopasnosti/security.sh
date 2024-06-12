@@ -158,8 +158,8 @@ function secure_vps() {
         run_command "echo 'linux-base linux-base/removing-title boolean true' | sudo debconf-set-selections"
         run_command "DEBIAN_FRONTEND=noninteractive apt update && DEBIAN_FRONTEND=noninteractive apt upgrade -yq"
         run_command "DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' dist-upgrade -yq"
-        run_command "apt install -y unattended-upgrades"
-        run_command "dpkg-reconfigure -f noninteractive unattended-upgrades"
+        run_command "DEBIAN_FRONTEND=noninteractive apt install -y unattended-upgrades"
+        run_command "sudo dpkg-reconfigure -f noninteractive unattended-upgrades"
     fi
 
     # Изменение пароля root
@@ -251,10 +251,10 @@ function secure_vps() {
     done
 
     # Отключение входа root по SSH
-    if [ -з "$DISABLE_ROOT_SSH" ];then
-        read -п "Хотите отключить вход root по SSH? (yes/no): " DISABLE_ROOT_SSH
+    if [ -z "$DISABLE_ROOT_SSH" ]; then
+        read -p "Хотите отключить вход root по SSH? (yes/no): " DISABLE_ROOT_SSH
     fi
-    if [ "$DISABLE_ROOT_SSH" == "yes" ];then
+    if [ "$DISABLE_ROOT_SSH" == "yes" ]; then
         run_command "sudo sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config"
         run_command "sudo systemctl restart sshd"
         echo "Вход root по SSH отключен."
@@ -266,12 +266,12 @@ function secure_vps() {
 
     # Изменение порта SSH
     CURRENT_SSH_PORT=22
-    if [ -з "$CHANGE_SSH_PORT" ];then
-        read -п "Хотите изменить порт SSH? (yes/no): " CHANGE_SSH_PORT
+    if [ -z "$CHANGE_SSH_PORT" ]; then
+        read -p "Хотите изменить порт SSH? (yes/no): " CHANGE_SSH_PORT
     fi
-    if [ "$CHANGE_SSH_PORT" == "yes" ];then
-        if [ -з "$NEW_SSH_PORT" ];then
-            read -п "Введите новый порт SSH: " NEW_SSH_PORT
+    if [ "$CHANGE_SSH_PORT" == "yes" ]; then
+        if [ -z "$NEW_SSH_PORT" ]; then
+            read -p "Введите новый порт SSH: " NEW_SSH_PORT
         fi
         run_command "sudo sed -i 's/#Port 22/Port $NEW_SSH_PORT/' /etc/ssh/sshd_config"
         run_command "sudo systemctl restart sshd"
@@ -280,21 +280,21 @@ function secure_vps() {
     fi
 
     # Настройка ufw
-    if [ -з "$CONFIGURE_UFW" ];then
-        read -п "Хотите настроить ufw? (yes/no): " CONFIGURE_UFW
+    if [ -z "$CONFIGURE_UFW" ]; then
+        read -p "Хотите настроить ufw? (yes/no): " CONFIGURE_UFW
     fi
-    if [ "$CONFIGURE_UFW" == "yes" ];then
+    if [ "$CONFIGURE_UFW" == "yes" ]; then
         run_command "sudo apt install -yq ufw"
-        yes | run_command "sudo ufw allow $CURRENT_SSH_PORT/tcp"
-        yes | run_command "sudo ufw enable"
+        echo "y" | run_command "sudo ufw allow $CURRENT_SSH_PORT/tcp"
+        echo "y" | run_command "sudo ufw enable"
         echo "ufw настроен и включен."
     fi
 
     # Настройка fail2ban
-    if [ -з "$CONFIGURE_FAIL2BAN" ];then
-        read -п "Хотите настроить fail2ban? (yes/no): " CONFIGURE_FAIL2BAN
+    if [ -z "$CONFIGURE_FAIL2BAN" ]; then
+        read -p "Хотите настроить fail2ban? (yes/no): " CONFIGURE_FAIL2BAN
     fi
-    if [ "$CONFIGURE_FAIL2BAN" == "yes" ];then
+    if [ "$CONFIGURE_FAIL2BAN" == "yes" ]; then
         run_command "sudo apt install -yq fail2ban"
         run_command "sudo systemctl enable fail2ban"
         run_command "sudo systemctl start fail2ban"
@@ -313,17 +313,17 @@ EOT'"
 
 # Главная функция
 function main() {
-    read -п "Выберите режим работы (local/ssh): " MODE
+    read -p "Выберите режим работы (local/ssh): " MODE
 
-    if [ "$MODE" == "ssh" ];then
-        if [ -з "$SSH_HOST" ];then
-            read -п "Введите хост SSH: " SSH_HOST
+    if [ "$MODE" == "ssh" ]; then
+        if [ -z "$SSH_HOST" ]; then
+            read -p "Введите хост SSH: " SSH_HOST
         fi
-        if [ -з "$SSH_USER" ];then
-            read -п "Введите имя пользователя SSH: " SSH_USER
+        if [ -z "$SSH_USER" ]; then
+            read -p "Введите имя пользователя SSH: " SSH_USER
         fi
-        if [ -з "$SSH_PASSWORD" ];then
-            read -с -п "Введите пароль SSH: " SSH_PASSWORD
+        if [ -z "$SSH_PASSWORD" ]; then
+            read -s -p "Введите пароль SSH: " SSH_PASSWORD
             echo
         fi
     fi
