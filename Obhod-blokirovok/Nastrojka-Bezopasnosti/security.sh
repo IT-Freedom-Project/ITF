@@ -251,8 +251,8 @@ function secure_vps() {
     done
 
     # Отключение входа root по SSH
-    if [ -z "$DISABLE_ROOT_SSH" ];then
-        read -p "Хотите отключить вход root по SSH? (yes/no): " DISABLE_ROOT_SSH
+    if [ -з "$DISABLE_ROOT_SSH" ];then
+        read -п "Хотите отключить вход root по SSH? (yes/no): " DISABLE_ROOT_SSH
     fi
     if [ "$DISABLE_ROOT_SSH" == "yes" ];then
         run_command "sudo sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config"
@@ -285,8 +285,8 @@ function secure_vps() {
     fi
     if [ "$CONFIGURE_UFW" == "yes" ];then
         run_command "sudo apt install -yq ufw"
-        run_command "sudo ufw allow $CURRENT_SSH_PORT/tcp"
-        run_command "sudo ufw enable"
+        yes | run_command "sudo ufw allow $CURRENT_SSH_PORT/tcp"
+        yes | run_command "sudo ufw enable"
         echo "ufw настроен и включен."
     fi
 
