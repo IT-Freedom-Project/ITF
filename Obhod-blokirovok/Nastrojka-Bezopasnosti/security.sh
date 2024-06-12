@@ -99,7 +99,7 @@ function change_user_password() {
         fi
         read -s -p "Повторите новый пароль для пользователя $username: " password_confirm
         echo
-        if [ "$password" != "$password_confirm" ];then
+        if [ "$password" != "$password_confirm" ]; then
             echo "Пароли не совпадают. Попробуйте снова."
             password=""
             continue
@@ -152,9 +152,8 @@ function secure_vps() {
     if [ "$UPDATE_SYSTEM" == "yes" ]; then
         echo "Обновляем систему..."
         run_command "echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections"
-        run_command "sudo apt update && sudo apt install -y unattended-upgrades"
-        run_command "sudo unattended-upgrades -v"
-        run_command "sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' upgrade -yq"
+        run_command "sudo DEBIAN_FRONTEND=noninteractive apt update && sudo DEBIAN_FRONTEND=noninteractive apt upgrade -yq"
+        run_command "sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' dist-upgrade -yq"
     fi
 
     # Изменение пароля root
@@ -290,7 +289,7 @@ function secure_vps() {
         read -p "Хотите настроить fail2ban? (yes/no): " CONFIGURE_FAIL2BAN
     fi
     if [ "$CONFIGURE_FAIL2BAN" == "yes" ]; then
-        run_command "sudo apt install fail2ban -y"
+        run_command "sudo apt install -yq fail2ban"
         run_command "sudo systemctl enable fail2ban"
         run_command "sudo systemctl start fail2ban"
         run_command "sudo bash -c 'cat <<EOT > /etc/fail2ban/jail.local
