@@ -154,11 +154,12 @@ function secure_vps() {
         run_command "echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections"
         run_command "echo 'grub-pc grub-pc/install_devices multiselect /dev/sda' | sudo debconf-set-selections"
         run_command "echo 'grub-pc grub-pc/install_devices_disks_changed multiselect /dev/sda' | sudo debconf-set-selections"
-        run_command "echo 'unattended-upgrades unattended-upgrades/enable_auto_updates boolean true' | sudo debconf-set-selections"
-        run_command "sudo DEBIAN_FRONTEND=noninteractive apt update && sudo DEBIAN_FRONTEND=noninteractive apt upgrade -yq"
-        run_command "sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' dist-upgrade -yq"
-        run_command "sudo apt install -y unattended-upgrades"
-        run_command "sudo dpkg-reconfigure -f noninteractive unattended-upgrades"
+        run_command "echo 'linux-base linux-base/removing-title2 boolean true' | sudo debconf-set-selections"
+        run_command "echo 'linux-base linux-base/removing-title boolean true' | sudo debconf-set-selections"
+        run_command "DEBIAN_FRONTEND=noninteractive apt update && DEBIAN_FRONTEND=noninteractive apt upgrade -yq"
+        run_command "DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' dist-upgrade -yq"
+        run_command "apt install -y unattended-upgrades"
+        run_command "dpkg-reconfigure -f noninteractive unattended-upgrades"
     fi
 
     # Изменение пароля root
