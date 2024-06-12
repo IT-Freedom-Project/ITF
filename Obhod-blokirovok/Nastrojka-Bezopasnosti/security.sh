@@ -152,6 +152,7 @@ function secure_vps() {
     if [ "$UPDATE_SYSTEM" == "yes" ]; then
         echo "Обновляем систему..."
         run_command "echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections"
+        run_command "echo 'grub-pc grub-pc/install_devices multiselect /dev/sda' | sudo debconf-set-selections"
         run_command "sudo DEBIAN_FRONTEND=noninteractive apt update && sudo DEBIAN_FRONTEND=noninteractive apt upgrade -yq"
         run_command "sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' dist-upgrade -yq"
     fi
@@ -166,13 +167,13 @@ function secure_vps() {
                 read -s -p "Введите новый пароль для root: " ROOT_PASSWORD
                 echo
                 validate_password "$ROOT_PASSWORD"
-                if [ $? -ne 0 ];then
+                if [ $? -ne 0 ]; then
                     ROOT_PASSWORD=""
                     continue
                 fi
                 read -s -p "Повторите новый пароль для root: " ROOT_PASSWORD_CONFIRM
                 echo
-                if [ "$ROOT_PASSWORD" != "$ROOT_PASSWORD_CONFIRM" ];then
+                if [ "$ROOT_PASSWORD" != "$ROOT_PASSWORD_CONFIRM" ]; then
                     echo "Пароли не совпадают. Попробуйте снова."
                     ROOT_PASSWORD=""
                     continue
@@ -181,7 +182,7 @@ function secure_vps() {
             break
         done
         run_command "echo 'root:$ROOT_PASSWORD' | sudo chpasswd"
-        if [ $? -eq 0 ];then
+        if [ $? -eq 0 ]; then
             echo "Пароль root успешно изменен."
         else
             echo "Не удалось изменить пароль root."
@@ -191,14 +192,14 @@ function secure_vps() {
     # Создание новых пользователей
     while true; do
         read -p "Хотите создать нового пользователя? (yes/no): " CREATE_USER
-        if [ "$CREATE_USER" == "no" ];then
+        if [ "$CREATE_USER" == "no" ]; then
             break
         fi
 
         while true; do
             read -p "Введите имя пользователя: " username
             validate_username "$username"
-            if [ $? -eq 0 ];then
+            if [ $? -eq 0 ]; then
                 break
             fi
         done
@@ -316,8 +317,8 @@ function main() {
         if [ -z "$SSH_USER" ];then
             read -p "Введите имя пользователя SSH: " SSH_USER
         fi
-        if [ -z "$SSH_PASSWORD" ];then
-            read -s -p "Введите пароль SSH: " SSH_PASSWORD
+        if [ -з "$SSH_PASSWORD" ];then
+            read -с -п "Введите пароль SSH: " SSH_PASSWORD
             echo
         fi
     fi
