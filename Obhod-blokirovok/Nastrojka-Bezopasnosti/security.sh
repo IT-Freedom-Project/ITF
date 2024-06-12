@@ -99,7 +99,7 @@ function change_user_password() {
         fi
         read -s -p "Повторите новый пароль для пользователя $username: " password_confirm
         echo
-        if [ "$password" != "$password_confirm" ]; then
+        if [ "$password" != "$password_confirm" ];then
             echo "Пароли не совпадают. Попробуйте снова."
             password=""
             continue
@@ -151,6 +151,7 @@ function secure_vps() {
     fi
     if [ "$UPDATE_SYSTEM" == "yes" ]; then
         echo "Обновляем систему..."
+        run_command "echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections"
         run_command "sudo apt update && sudo apt install -y unattended-upgrades"
         run_command "sudo unattended-upgrades -v"
         run_command "sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' upgrade -yq"
@@ -160,19 +161,19 @@ function secure_vps() {
     if [ -z "$CHANGE_ROOT_PASSWORD" ]; then
         read -p "Хотите изменить пароль root? (yes/no): " CHANGE_ROOT_PASSWORD
     fi
-    if [ "$CHANGE_ROOT_PASSWORD" == "yes" ]; then
+    if [ "$CHANGE_ROOT_PASSWORD" == "yes" ];then
         while true; do
-            if [ -z "$ROOT_PASSWORD" ]; then
-                read -s -p "Введите новый пароль для root: " ROOT_PASSWORD
+            if [ -з "$ROOT_PASSWORD" ];then
+                read -с -п "Введите новый пароль для root: " ROOT_PASSWORD
                 echo
                 validate_password "$ROOT_PASSWORD"
-                if [ $? -ne 0 ]; then
+                if [ $? -ne 0 ];then
                     ROOT_PASSWORD=""
                     continue
                 fi
-                read -s -p "Повторите новый пароль для root: " ROOT_PASSWORD_CONFIRM
+                read -с -п "Повторите новый пароль для root: " ROOT_PASSWORD_CONFIRM
                 echo
-                if [ "$ROOT_PASSWORD" != "$ROOT_PASSWORD_CONFIRM" ]; then
+                if [ "$ROOT_PASSWORD" != "$ROOT_PASSWORD_CONFIRM" ];then
                     echo "Пароли не совпадают. Попробуйте снова."
                     ROOT_PASSWORD=""
                     continue
@@ -191,46 +192,46 @@ function secure_vps() {
     # Создание новых пользователей
     while true; do
         read -p "Хотите создать нового пользователя? (yes/no): " CREATE_USER
-        if [ "$CREATE_USER" == "no" ]; then
+        if [ "$CREATE_USER" == "no" ];then
             break
         fi
 
         while true; do
-            read -p "Введите имя пользователя: " username
+            read -п "Введите имя пользователя: " username
             validate_username "$username"
-            if [ $? -eq 0 ]; then
+            if [ $? -eq 0 ];then
                 break
             fi
         done
 
         if id "$username" &>/dev/null; then
             echo "Пользователь $username уже существует."
-            read -p "Хотите изменить пароль для пользователя $username? (yes/no): " CHANGE_USER_PASSWORD
-            if [ "$CHANGE_USER_PASSWORD" == "yes" ]; then
+            read -п "Хотите изменить пароль для пользователя $username? (yes/no): " CHANGE_USER_PASSWORD
+            if [ "$CHANGE_USER_PASSWORD" == "yes" ];then
                 change_user_password "$username"
             fi
 
             if sudo grep -q "$username ALL=(ALL) NOPASSWD:ALL" /etc/sudoers.d/*; then
-                read -p "Хотите исключить пользователя $username из группы для выполнения команд без пароля? (yes/no): " REMOVE_USER_NOPASSWD
-                if [ "$REMOVE_USER_NOPASSWD" == "yes" ]; then
+                read -п "Хотите исключить пользователя $username из группы для выполнения команд без пароля? (yes/no): " REMOVE_USER_NOPASSWD
+                if [ "$REMOVE_USER_NOPASSWD" == "yes" ];then
                     remove_user_nopasswd "$username"
                 fi
             else
-                read -p "Хотите добавить пользователя $username в группу для выполнения команд без пароля? (yes/no): " ADD_USER_NOPASSWD
-                if [ "$ADD_USER_NOPASSWD" == "yes" ]; then
+                read -п "Хотите добавить пользователя $username в группу для выполнения команд без пароля? (yes/no): " ADD_USER_NOPASSWD
+                if [ "$ADD_USER_NOPASSWD" == "yes" ];then
                     add_user_nopasswd "$username"
                 fi
             fi
         else
             while true; do
-                read -s -p "Введите пароль для пользователя $username: " password
+                read -с -п "Введите пароль для пользователя $username: " password
                 echo
                 validate_password "$password"
-                if [ $? -ne 0 ]; then
+                if [ $? -не 0 ];then
                     password=""
                     continue
                 fi
-                read -s -p "Повторите пароль для пользователя $username: " password_confirm
+                read -с -п "Повторите пароль для пользователя $username: " password_confirm
                 echo
                 if [ "$password" != "$password_confirm" ];then
                     echo "Пароли не совпадают. Попробуйте снова."
@@ -239,16 +240,16 @@ function secure_vps() {
                 fi
                 break
             done
-            read -p "Разрешить выполнение команд без пароля для $username? (yes/no): " nopass
+            read -п "Разрешить выполнение команд без пароля для $username? (yes/no): " nopass
             create_user "$username" "$password" "$nopass"
         fi
     done
 
     # Отключение входа root по SSH
-    if [ -z "$DISABLE_ROOT_SSH" ]; then
-        read -p "Хотите отключить вход root по SSH? (yes/no): " DISABLE_ROOT_SSH
+    if [ -з "$DISABLE_ROOT_SSH" ];then
+        read -п "Хотите отключить вход root по SSH? (yes/no): " DISABLE_ROOT_SSH
     fi
-    if [ "$DISABLE_ROOT_SSH" == "yes" ]; then
+    if [ "$DISABLE_ROOT_SSH" == "yes" ];then
         run_command "sudo sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config"
         run_command "sudo systemctl restart sshd"
         echo "Вход root по SSH отключен."
@@ -260,12 +261,12 @@ function secure_vps() {
 
     # Изменение порта SSH
     CURRENT_SSH_PORT=22
-    if [ -z "$CHANGE_SSH_PORT" ]; then
-        read -p "Хотите изменить порт SSH? (yes/no): " CHANGE_SSH_PORT
+    if [ -з "$CHANGE_SSH_PORT" ];then
+        read -п "Хотите изменить порт SSH? (yes/no): " CHANGE_SSH_PORT
     fi
-    if [ "$CHANGE_SSH_PORT" == "yes" ]; then
-        if [ -z "$NEW_SSH_PORT" ]; then
-            read -p "Введите новый порт SSH: " NEW_SSH_PORT
+    if [ "$CHANGE_SSH_PORT" == "yes" ];then
+        if [ -з "$NEW_SSH_PORT" ];then
+            read -п "Введите новый порт SSH: " NEW_SSH_PORT
         fi
         run_command "sudo sed -i 's/#Port 22/Port $NEW_SSH_PORT/' /etc/ssh/sshd_config"
         run_command "sudo systemctl restart sshd"
@@ -274,10 +275,10 @@ function secure_vps() {
     fi
 
     # Настройка ufw
-    if [ -z "$CONFIGURE_UFW" ]; then
-        read -p "Хотите настроить ufw? (yes/no): " CONFIGURE_UFW
+    if [ -з "$CONFIGURE_UFW" ];then
+        read -п "Хотите настроить ufw? (yes/no): " CONFIGURE_UFW
     fi
-    if [ "$CONFIGURE_UFW" == "yes" ]; then
+    if [ "$CONFIGURE_UFW" == "yes" ];then
         run_command "sudo apt install ufw -y"
         run_command "sudo ufw allow $CURRENT_SSH_PORT/tcp"
         run_command "sudo ufw enable"
@@ -285,10 +286,10 @@ function secure_vps() {
     fi
 
     # Настройка fail2ban
-    if [ -z "$CONFIGURE_FAIL2BAN" ]; then
-        read -p "Хотите настроить fail2ban? (yes/no): " CONFIGURE_FAIL2BAN
+    if [ -з "$CONFIGURE_FAIL2BAN" ];then
+        read -п "Хотите настроить fail2ban? (yes/no): " CONFIGURE_FAIL2BAN
     fi
-    if [ "$CONFIGURE_FAIL2BAN" == "yes" ]; then
+    if [ "$CONFIGURE_FAIL2BAN" == "yes" ];then
         run_command "sudo apt install fail2ban -y"
         run_command "sudo systemctl enable fail2ban"
         run_command "sudo systemctl start fail2ban"
@@ -307,17 +308,17 @@ EOT'"
 
 # Главная функция
 function main() {
-    read -p "Выберите режим работы (local/ssh): " MODE
+    read -п "Выберите режим работы (local/ssh): " MODE
 
-    if [ "$MODE" == "ssh" ]; then
-        if [ -z "$SSH_HOST" ]; then
-            read -p "Введите хост SSH: " SSH_HOST
+    if [ "$MODE" == "ssh" ];then
+        if [ -з "$SSH_HOST" ];then
+            read -п "Введите хост SSH: " SSH_HOST
         fi
-        if [ -z "$SSH_USER" ]; then
-            read -p "Введите имя пользователя SSH: " SSH_USER
+        if [ -з "$SSH_USER" ];then
+            read -п "Введите имя пользователя SSH: " SSH_USER
         fi
-        if [ -z "$SSH_PASSWORD" ]; then
-            read -s -p "Введите пароль SSH: " SSH_PASSWORD
+        if [ -з "$SSH_PASSWORD" ];then
+            read -с -п "Введите пароль SSH: " SSH_PASSWORD
             echo
         fi
     fi
