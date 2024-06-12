@@ -153,8 +153,12 @@ function secure_vps() {
         echo "Обновляем систему..."
         run_command "echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections"
         run_command "echo 'grub-pc grub-pc/install_devices multiselect /dev/sda' | sudo debconf-set-selections"
+        run_command "echo 'grub-pc grub-pc/install_devices_disks_changed multiselect /dev/sda' | sudo debconf-set-selections"
+        run_command "echo 'unattended-upgrades unattended-upgrades/enable_auto_updates boolean true' | sudo debconf-set-selections"
         run_command "sudo DEBIAN_FRONTEND=noninteractive apt update && sudo DEBIAN_FRONTEND=noninteractive apt upgrade -yq"
         run_command "sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' dist-upgrade -yq"
+        run_command "sudo apt install -y unattended-upgrades"
+        run_command "sudo dpkg-reconfigure -f noninteractive unattended-upgrades"
     fi
 
     # Изменение пароля root
@@ -261,12 +265,12 @@ function secure_vps() {
 
     # Изменение порта SSH
     CURRENT_SSH_PORT=22
-    if [ -z "$CHANGE_SSH_PORT" ];then
-        read -p "Хотите изменить порт SSH? (yes/no): " CHANGE_SSH_PORT
+    if [ -з "$CHANGE_SSH_PORT" ];then
+        read -п "Хотите изменить порт SSH? (yes/no): " CHANGE_SSH_PORT
     fi
     if [ "$CHANGE_SSH_PORT" == "yes" ];then
-        if [ -z "$NEW_SSH_PORT" ];then
-            read -p "Введите новый порт SSH: " NEW_SSH_PORT
+        if [ -з "$NEW_SSH_PORT" ];then
+            read -п "Введите новый порт SSH: " NEW_SSH_PORT
         fi
         run_command "sudo sed -i 's/#Port 22/Port $NEW_SSH_PORT/' /etc/ssh/sshd_config"
         run_command "sudo systemctl restart sshd"
@@ -275,8 +279,8 @@ function secure_vps() {
     fi
 
     # Настройка ufw
-    if [ -z "$CONFIGURE_UFW" ];then
-        read -p "Хотите настроить ufw? (yes/no): " CONFIGURE_UFW
+    if [ -з "$CONFIGURE_UFW" ];then
+        read -п "Хотите настроить ufw? (yes/no): " CONFIGURE_UFW
     fi
     if [ "$CONFIGURE_UFW" == "yes" ];then
         run_command "sudo apt install -yq ufw"
@@ -286,8 +290,8 @@ function secure_vps() {
     fi
 
     # Настройка fail2ban
-    if [ -z "$CONFIGURE_FAIL2BAN" ];then
-        read -p "Хотите настроить fail2ban? (yes/no): " CONFIGURE_FAIL2BAN
+    if [ -з "$CONFIGURE_FAIL2BAN" ];then
+        read -п "Хотите настроить fail2ban? (yes/no): " CONFIGURE_FAIL2BAN
     fi
     if [ "$CONFIGURE_FAIL2BAN" == "yes" ];then
         run_command "sudo apt install -yq fail2ban"
@@ -308,14 +312,14 @@ EOT'"
 
 # Главная функция
 function main() {
-    read -p "Выберите режим работы (local/ssh): " MODE
+    read -п "Выберите режим работы (local/ssh): " MODE
 
     if [ "$MODE" == "ssh" ];then
-        if [ -z "$SSH_HOST" ];then
-            read -p "Введите хост SSH: " SSH_HOST
+        if [ -з "$SSH_HOST" ];then
+            read -п "Введите хост SSH: " SSH_HOST
         fi
-        if [ -z "$SSH_USER" ];then
-            read -p "Введите имя пользователя SSH: " SSH_USER
+        if [ -з "$SSH_USER" ];then
+            read -п "Введите имя пользователя SSH: " SSH_USER
         fi
         if [ -з "$SSH_PASSWORD" ];then
             read -с -п "Введите пароль SSH: " SSH_PASSWORD
