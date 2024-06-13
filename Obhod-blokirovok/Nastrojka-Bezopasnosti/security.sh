@@ -160,7 +160,7 @@ function secure_vps() {
         run_command "DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' dist-upgrade -yq"
         run_command "DEBIAN_FRONTEND=noninteractive apt install -y unattended-upgrades"
         run_command "sudo dpkg-reconfigure -f noninteractive unattended-upgrades"
-        run_command "sudo unattended-upgrade -d --force-confdef --force-confold"
+        run_command "sudo DEBIAN_FRONTEND=noninteractive unattended-upgrade"
     fi
 
     # Изменение пароля root
