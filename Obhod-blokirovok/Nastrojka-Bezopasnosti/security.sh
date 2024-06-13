@@ -251,18 +251,22 @@ function secure_vps() {
         fi
     done
 
-    # Отключение входа root по SSH
-    if [ -z "$DISABLE_ROOT_SSH" ]; then
-        read -p "Хотите отключить вход root по SSH? (yes/no): " DISABLE_ROOT_SSH
-    fi
-    if [ "$DISABLE_ROOT_SSH" == "yes" ]; then
-        run_command "sudo sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config"
-        run_command "sudo systemctl restart sshd"
-        echo "Вход root по SSH отключен."
+    # Проверка текущего состояния входа root по SSH
+    ROOT_SSH_STATUS=$(run_command "sudo grep '^PermitRootLogin' /etc/ssh/sshd_config")
+    if [[ "$ROOT_SSH_STATUS" == "PermitRootLogin no" ]]; then
+        read -p "Вход root по SSH отключен. Хотите включить вход root по SSH? (yes/no): " ENABLE_ROOT_SSH
+        if [ "$ENABLE_ROOT_SSH" == "yes" ]; then
+            run_command "sudo sed -i 's/PermitRootLogin no/PermitRootLogin yes/' /etc/ssh/sshd_config"
+            run_command "sudo systemctl restart sshd"
+            echo "Вход root по SSH включен."
+        fi
     else
-        run_command "sudo sed -i 's/PermitRootLogin no/PermitRootLogin yes/' /etc/ssh/sshd_config"
-        run_command "sudo systemctl restart sshd"
-        echo "Вход root по SSH включен."
+        read -p "Хотите отключить вход root по SSH? (yes/no): " DISABLE_ROOT_SSH
+        if [ "$DISABLE_ROOT_SSH" == "yes" ]; then
+            run_command "sudo sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config"
+            run_command "sudo systemctl restart sshd"
+            echo "Вход root по SSH отключен."
+        fi
     fi
 
     # Изменение порта SSH
