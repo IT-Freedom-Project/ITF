@@ -18,7 +18,7 @@ CHANGE_ROOT_PASSWORD=""  # yes/no
 ROOT_PASSWORD=""
 DISABLE_ROOT_SSH=""  # yes/no
 CHANGE_SSH_PORT=""  # yes/no
-NEW_SSH_PORT=""
+NEW_SSH_PORT=22
 CONFIGURE_UFW=""  # yes/no
 CONFIGURE_FAIL2BAN=""  # yes/no
 
@@ -314,6 +314,31 @@ EOT'"
         run_command "sudo systemctl restart fail2ban"
         echo "fail2ban установлен и настроен."
     fi
+
+    # Остановка qemu-guest-agent и других сервисов
+    SERVICES=("qemu-guest-agent")
+    for service in "${SERVICES[@]}"; do
+        if dpkg -l | grep -qw "$service"; then
+            SERVICE_STATUS=$(run_command "sudo systemctl is-active $service")
+            if [ "$SERVICE_STATUS" == "active" ]; then
+                read -p "$service установлен и активен. Хотите остановить и отключить его? (yes/no): " STOP_SERVICE
+                if [ "$STOP_SERVICE" == "yes" ]; then
+                    run_command "sudo systemctl stop $service"
+                    run_command "sudo systemctl disable $service"
+                    run_command "sudo systemctl mask $service"
+                    echo "$service остановлен, отключен и замаскирован."
+                fi
+            else
+                read -p "$service установлен, но не активен. Хотите включить его? (yes/no): " START_SERVICE
+                if [ "$START_SERVICE" == "yes" ]; then
+                    run_command "sudo systemctl unmask $service"
+                    run_command "sudo systemctl enable $service"
+                    run_command "sudo systemctl start $service"
+                    echo "$service включен и активен."
+                fi
+            fi
+        fi
+    done
 }
 
 # Главная функция
