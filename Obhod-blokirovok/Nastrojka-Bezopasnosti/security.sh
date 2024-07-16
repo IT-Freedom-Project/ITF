@@ -18,7 +18,7 @@ CHANGE_ROOT_PASSWORD=""  # yes/no
 ROOT_PASSWORD=""
 DISABLE_ROOT_SSH=""  # yes/no
 CHANGE_SSH_PORT=""  # yes/no
-NEW_SSH_PORT=22
+NEW_SSH_PORT=""
 CONFIGURE_UFW=""  # yes/no
 CONFIGURE_FAIL2BAN=""  # yes/no
 
