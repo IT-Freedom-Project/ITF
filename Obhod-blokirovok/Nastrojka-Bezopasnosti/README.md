@@ -6,4 +6,4 @@ wget -O security.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/mai
 
 или эту:
 
-curl -o bbr-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-BBR/bbr-itf.sh && sudo bash bbr-itf.sh
+curl -o security.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-Bezopasnosti/security.sh && sudo bash security.sh
