@@ -2,11 +2,11 @@
 
 Для запуска скрипта выполняем эту команду:
 
-wget -O security-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-Bezopasnosti/security-itf.sh && sudo bash security-itf.sh
+```wget -O security-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-Bezopasnosti/security-itf.sh && sudo bash security-itf.sh```
 
 или эту:
 
-curl -o security-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-Bezopasnosti/security-itf.sh && sudo bash security-itf.sh
+```curl -o security-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-Bezopasnosti/security-itf.sh && sudo bash security-itf.sh```
 
 Что происходит при запуске скрипта:
 
@@ -33,11 +33,11 @@ curl -o security-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF
 
 5 Хотите изменить порт SSH? (yes/no): вам предложат изменить порт для SSH по умолчанию. Лучше изменить. Диапазон 1024-65535.
 
-6 Хотите настроить ufw? (yes/no): Настраивает файрволл, который закрывает входящий трафик на все порты, кроме текущего порта ssh. Лучше настроить.
+6 Хотите настроить ufw? (yes/no): вам предложат настроить файрволл, который закрывает входящий трафик на все порты, кроме текущего порта ssh. Лучше настроить.
 
-7 Хотите настроить fail2ban? (yes/no): Настраивает систему защиту от брутфорса на ssh порту. Лучше настроить.
+7 Хотите настроить fail2ban? (yes/no): вам предложат настроить систему защиту от брутфорса на ssh порту. Лучше настроить.
 
-8 qemu-guest-agent установлен и активен. Хотите остановить и отключить его? (yes/no): отключает службу, через которую хостер может управлять системой на VPS (сбросить пароль для root и пр.). При этом в личном кабинете не будет видна статистика нагрузки VPS и сбросить пароль вы больше не сможете.  Скрипт предложит включить службу обратно, если она уже отключена.
+8 qemu-guest-agent установлен и активен. Хотите остановить и отключить его? (yes/no): вам предложат отключить службу, через которую хостер может управлять системой на VPS (сбросить пароль для root и пр.). При этом в личном кабинете не будет видна статистика нагрузки VPS и сбросить пароль для root вы больше не сможете, что может быть неудобно. Учтите, хостинг всё равно может иметь доступ к файловой системе вашего сервера. Скрипт предложит включить службу обратно, если она уже отключена. Отключать или нет - дело вкуса и конкретной ситуации.
 
 
 
