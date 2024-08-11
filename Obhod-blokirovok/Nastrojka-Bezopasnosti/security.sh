@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "Скрипт для настройки безопасности VPS от IT Freedom Project (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube) "
 
 # Переменные для SSH подключения (можно оставить пустыми для запроса при выполнении скрипта)
 SSH_HOST=""
@@ -361,4 +362,5 @@ function main() {
     secure_vps
 }
 
-main
+#main
+secure_vps
