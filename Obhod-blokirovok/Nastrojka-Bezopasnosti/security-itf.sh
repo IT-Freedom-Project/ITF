@@ -164,11 +164,33 @@ function restart_ssh_service() {
     fi
 }
 
+# Функция для запроса ответа yes/no с проверкой
+function prompt_yes_no() {
+    local prompt=$1
+    local response
+    while true; do
+        read -p "$prompt (yes/no): " response
+        case "$response" in
+            [Yy][Ee][Ss]|[Yy])
+                echo "yes"
+                return 0
+                ;;
+            [Nn][Oo]|[Nn])
+                echo "no"
+                return 1
+                ;;
+            *)
+                echo "Пожалуйста, введите 'yes' или 'no'."
+                ;;
+        esac
+    done
+}
+
 # Функция для настройки безопасности на VPS
 function secure_vps() {
     # Обновление системы
     if [ -z "$UPDATE_SYSTEM" ]; then
-        read -p "Хотите обновить систему? (yes/no): " UPDATE_SYSTEM
+        UPDATE_SYSTEM=$(prompt_yes_no "Хотите обновить систему?")
     fi
     if [ "$UPDATE_SYSTEM" == "yes" ]; then
         echo "Обновляем систему..."
@@ -186,7 +208,7 @@ function secure_vps() {
 
     # Изменение пароля root
     if [ -z "$CHANGE_ROOT_PASSWORD" ]; then
-        read -p "Хотите изменить пароль root? (yes/no): " CHANGE_ROOT_PASSWORD
+        CHANGE_ROOT_PASSWORD=$(prompt_yes_no "Хотите изменить пароль root?")
     fi
     if [ "$CHANGE_ROOT_PASSWORD" == "yes" ]; then
         while true; do
@@ -218,8 +240,7 @@ function secure_vps() {
 
     # Создание новых пользователей
     while true; do
-        read -p "Хотите создать нового пользователя? (yes/no): " CREATE_USER
-        if [ "$CREATE_USER" == "no" ]; then
+        if ! CREATE_USER=$(prompt_yes_no "Хотите создать нового пользователя?"); then
             break
         fi
 
@@ -233,19 +254,16 @@ function secure_vps() {
 
         if id "$username" &>/dev/null; then
             echo "Пользователь $username уже существует."
-            read -p "Хотите изменить пароль для пользователя $username? (yes/no): " CHANGE_USER_PASSWORD
-            if [ "$CHANGE_USER_PASSWORD" == "yes" ]; then
+            if CHANGE_USER_PASSWORD=$(prompt_yes_no "Хотите изменить пароль для пользователя $username?"); then
                 change_user_password "$username"
             fi
 
             if sudo grep -q "$username ALL=(ALL) NOPASSWD:ALL" /etc/sudoers.d/*; then
-                read -p "Хотите исключить пользователя $username из группы для выполнения команд без пароля? (yes/no): " REMOVE_USER_NOPASSWD
-                if [ "$REMOVE_USER_NOPASSWD" == "yes" ]; then
+                if REMOVE_USER_NOPASSWD=$(prompt_yes_no "Хотите исключить пользователя $username из группы для выполнения команд без пароля?"); then
                     remove_user_nopasswd "$username"
                 fi
             else
-                read -p "Хотите добавить пользователя $username в группу для выполнения команд без пароля? (yes/no): " ADD_USER_NOPASSWD
-                if [ "$ADD_USER_NOPASSWD" == "yes" ]; then
+                if ADD_USER_NOPASSWD=$(prompt_yes_no "Хотите добавить пользователя $username в группу для выполнения команд без пароля?"); then
                     add_user_nopasswd "$username"
                 fi
             fi
@@ -267,23 +285,22 @@ function secure_vps() {
                 fi
                 break
             done
-            read -p "Разрешить выполнение команд без пароля для $username? (yes/no): " nopass
-            create_user "$username" "$password" "$nopass"
+            if nopass=$(prompt_yes_no "Разрешить выполнение команд без пароля для $username?"); then
+                create_user "$username" "$password" "$nopass"
+            fi
         fi
     done
 
     # Проверка текущего состояния входа root по SSH
     ROOT_SSH_STATUS=$(run_command "sudo grep '^PermitRootLogin' /etc/ssh/sshd_config")
     if [[ "$ROOT_SSH_STATUS" == "PermitRootLogin no" ]]; then
-        read -p "Вход root по SSH отключен. Хотите включить вход root по SSH? (yes/no): " ENABLE_ROOT_SSH
-        if [ "$ENABLE_ROOT_SSH" == "yes" ]; then
+        if ENABLE_ROOT_SSH=$(prompt_yes_no "Вход root по SSH отключен. Хотите включить вход root по SSH?"); then
             run_command "sudo sed -i 's/PermitRootLogin no/PermitRootLogin yes/' /etc/ssh/sshd_config"
             restart_ssh_service
             echo "Вход root по SSH включен."
         fi
     else
-        read -p "Хотите отключить вход root по SSH? (yes/no): " DISABLE_ROOT_SSH
-        if [ "$DISABLE_ROOT_SSH" == "yes" ]; then
+        if DISABLE_ROOT_SSH=$(prompt_yes_no "Хотите отключить вход root по SSH?"); then
             run_command "sudo sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config"
             restart_ssh_service
             echo "Вход root по SSH отключен."
@@ -293,7 +310,7 @@ function secure_vps() {
     # Изменение порта SSH
     CURRENT_SSH_PORT=22
     if [ -z "$CHANGE_SSH_PORT" ]; then
-        read -p "Хотите изменить порт SSH? (yes/no): " CHANGE_SSH_PORT
+        CHANGE_SSH_PORT=$(prompt_yes_no "Хотите изменить порт SSH?")
     fi
     if [ "$CHANGE_SSH_PORT" == "yes" ]; then
         if [ -z "$NEW_SSH_PORT" ]; then
@@ -307,7 +324,7 @@ function secure_vps() {
 
     # Настройка ufw
     if [ -z "$CONFIGURE_UFW" ]; then
-        read -p "Хотите настроить ufw? (yes/no): " CONFIGURE_UFW
+        CONFIGURE_UFW=$(prompt_yes_no "Хотите настроить ufw?")
     fi
     if [ "$CONFIGURE_UFW" == "yes" ]; then
         run_command "sudo apt install -yq ufw"
@@ -318,7 +335,7 @@ function secure_vps() {
 
     # Настройка fail2ban
     if [ -z "$CONFIGURE_FAIL2BAN" ]; then
-        read -p "Хотите настроить fail2ban? (yes/no): " CONFIGURE_FAIL2BAN
+        CONFIGURE_FAIL2BAN=$(prompt_yes_no "Хотите настроить fail2ban?")
     fi
     if [ "$CONFIGURE_FAIL2BAN" == "yes" ]; then
         run_command "sudo apt install -yq fail2ban"
@@ -342,16 +359,14 @@ EOT'"
         if dpkg -l | grep -qw "$service"; then
             SERVICE_STATUS=$(run_command "sudo systemctl is-active $service")
             if [ "$SERVICE_STATUS" == "active" ]; then
-                read -p "$service установлен и активен. Хотите остановить и отключить его? (yes/no): " STOP_SERVICE
-                if [ "$STOP_SERVICE" == "yes" ]; then
+                if STOP_SERVICE=$(prompt_yes_no "$service установлен и активен. Хотите остановить и отключить его?"); then
                     run_command "sudo systemctl stop $service"
                     run_command "sudo systemctl disable $service"
                     run_command "sudo systemctl mask $service"
                     echo "$service остановлен, отключен и замаскирован."
                 fi
             else
-                read -p "$service установлен, но не активен. Хотите включить его? (yes/no): " START_SERVICE
-                if [ "$START_SERVICE" == "yes" ]; then
+                if START_SERVICE=$(prompt_yes_no "$service установлен, но не активен. Хотите включить его?"); then
                     run_command "sudo systemctl unmask $service"
                     run_command "sudo systemctl enable $service"
                     run_command "sudo systemctl start $service"
@@ -373,7 +388,7 @@ function main() {
         if [ -z "$SSH_USER" ]; then
             read -p "Введите имя пользователя SSH: " SSH_USER
         fi
-        if [ -z "$SSH_PASSWORD" ]; then
+        if [ -z "$SSH_PASSWORD" ];then
             read -s -p "Введите пароль SSH: " SSH_PASSWORD
             echo
         fi
@@ -382,4 +397,4 @@ function main() {
     secure_vps
 }
 
-secure_vps
+    secure_vps
