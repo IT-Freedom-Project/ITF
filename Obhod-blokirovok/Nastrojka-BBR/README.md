@@ -2,11 +2,11 @@
 \
 Для запуска скрипта выполняем эту команду:\
 \
-```wget -O bbr-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-BBR/bbr-itf.sh && sudo bash bbr-itf.sh```\
+```sudo wget -O bbr-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-BBR/bbr-itf.sh && sudo bash bbr-itf.sh```\
 \
 или эту: \
 \
-```curl -o bbr-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-BBR/bbr-itf.sh && sudo bash bbr-itf.sh``` \
+```sudo curl -o bbr-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-BBR/bbr-itf.sh && sudo bash bbr-itf.sh``` \
 \
 Или делаем вручную:
 
