@@ -192,6 +192,7 @@ function validate_ssh_port() {
     if [[ "$port" -ge 1024 && "$port" -le 65535 ]]; then
         return 0
     else
+        echo "Недопустимый порт. Порт должен быть в диапазоне от 1024 до 65535."
         return 1
     fi
 }
@@ -338,8 +339,6 @@ function secure_vps() {
             fi
             if validate_ssh_port "$NEW_SSH_PORT"; then
                 break
-            else
-                echo "Недопустимый порт. Порт должен быть в диапазоне от 1024 до 65535."
             fi
         done
         run_command "sudo sed -i 's/#Port 22/Port $NEW_SSH_PORT/' /etc/ssh/sshd_config"
