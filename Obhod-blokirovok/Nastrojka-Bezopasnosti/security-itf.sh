@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Скрипт для настройки безопасности VPS от IT Freedom Project (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube)"
+echo "Скрипт для настройки безопасности VPS от IT Freedom Project v0.80(https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube)"
 
 # Переменные для SSH подключения (можно оставить пустыми для запроса при выполнении скрипта)
 SSH_HOST=""
@@ -189,10 +189,9 @@ function prompt_yes_no() {
 # Функция для проверки порта SSH
 function validate_ssh_port() {
     local port=$1
-    if [[ "$port" -ge 1024 && "$port" -le 65535 ]]; then
+    if [[ "$port" =~ ^[0-9]+$ && "$port" -ge 1024 && "$port" -le 65535 ]]; then
         return 0
     else
-        echo "Недопустимый порт. Порт должен быть в диапазоне от 1024 до 65535."
         return 1
     fi
 }
@@ -208,10 +207,10 @@ function disable_ufw_if_active() {
 # Функция для настройки безопасности на VPS
 function secure_vps() {
     # Обновление системы
-    if [ -z "$UPDATE_SYSTEM" ]; then
+    if [ -z "$UPDATE_SYSTEM" ];then
         UPDATE_SYSTEM=$(prompt_yes_no "Хотите обновить систему?")
     fi
-    if [ "$UPDATE_SYSTEM" == "yes" ]; then
+    if [ "$UPDATE_SYSTEM" == "yes" ];then
         echo "Обновляем систему..."
         run_command "echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections"
         run_command "echo 'grub-pc grub-pc/install_devices multiselect /dev/sda' | sudo debconf-set-selections"
@@ -226,22 +225,22 @@ function secure_vps() {
     fi
 
     # Изменение пароля root
-    if [ -z "$CHANGE_ROOT_PASSWORD" ]; then
+    if [ -z "$CHANGE_ROOT_PASSWORD" ];then
         CHANGE_ROOT_PASSWORD=$(prompt_yes_no "Хотите изменить пароль root?")
     fi
-    if [ "$CHANGE_ROOT_PASSWORD" == "yes" ]; then
+    if [ "$CHANGE_ROOT_PASSWORD" == "yes" ];then
         while true; do
-            if [ -z "$ROOT_PASSWORD" ]; then
+            if [ -z "$ROOT_PASSWORD" ];then
                 read -s -p "Введите новый пароль для root: " ROOT_PASSWORD
                 echo
                 validate_password "$ROOT_PASSWORD"
-                if [ $? -ne 0 ]; then
+                if [ $? -ne 0 ];then
                     ROOT_PASSWORD=""
                     continue
                 fi
                 read -s -p "Повторите новый пароль для root: " ROOT_PASSWORD_CONFIRM
                 echo
-                if [ "$ROOT_PASSWORD" != "$ROOT_PASSWORD_CONFIRM" ]; then
+                if [ "$ROOT_PASSWORD" != "$ROOT_PASSWORD_CONFIRM" ];then
                     echo "Пароли не совпадают. Попробуйте снова."
                     ROOT_PASSWORD=""
                     continue
@@ -250,7 +249,7 @@ function secure_vps() {
             break
         done
         run_command "echo 'root:$ROOT_PASSWORD' | sudo chpasswd"
-        if [ $? -eq 0 ]; then
+        if [ $? -eq 0 ];then
             echo "Пароль root успешно изменен."
         else
             echo "Не удалось изменить пароль root."
@@ -291,7 +290,7 @@ function secure_vps() {
                 read -s -p "Введите пароль для пользователя $username: " password
                 echo
                 validate_password "$password"
-                if [ $? -ne 0 ]; then
+                if [ $? -ne 0 ];then
                     password=""
                     continue
                 fi
@@ -312,14 +311,14 @@ function secure_vps() {
 
     # Проверка текущего состояния входа root по SSH
     ROOT_SSH_STATUS=$(run_command "sudo grep '^PermitRootLogin' /etc/ssh/sshd_config")
-    if [[ "$ROOT_SSH_STATUS" == "PermitRootLogin no" ]]; then
-        if ENABLE_ROOT_SSH=$(prompt_yes_no "Вход root по SSH отключен. Хотите включить вход root по SSH?"); then
+    if [[ "$ROOT_SSH_STATUS" == "PermitRootLogin no" ]];then
+        if ENABLE_ROOT_SSH=$(prompt_yes_no "Вход root по SSH отключен. Хотите включить вход root по SSH?");then
             run_command "sudo sed -i 's/PermitRootLogin no/PermitRootLogin yes/' /etc/ssh/sshd_config"
             restart_ssh_service
             echo "Вход root по SSH включен."
         fi
     else
-        if DISABLE_ROOT_SSH=$(prompt_yes_no "Хотите отключить вход root по SSH?"); then
+        if DISABLE_ROOT_SSH=$(prompt_yes_no "Хотите отключить вход root по SSH?");then
             run_command "sudo sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config"
             restart_ssh_service
             echo "Вход root по SSH отключен."
@@ -328,17 +327,20 @@ function secure_vps() {
 
     # Изменение порта SSH
     CURRENT_SSH_PORT=22
-    if [ -z "$CHANGE_SSH_PORT" ]; then
+    if [ -z "$CHANGE_SSH_PORT" ];then
         CHANGE_SSH_PORT=$(prompt_yes_no "Хотите изменить порт SSH?")
     fi
-    if [ "$CHANGE_SSH_PORT" == "yes" ]; then
+    if [ "$CHANGE_SSH_PORT" == "yes" ];then
         disable_ufw_if_active # Отключение ufw перед изменением порта SSH
         while true; do
-            if [ -z "$NEW_SSH_PORT" ]; then
+            if [ -z "$NEW_SSH_PORT" ];then
                 read -p "Введите новый порт SSH (от 1024 до 65535): " NEW_SSH_PORT
             fi
-            if validate_ssh_port "$NEW_SSH_PORT"; then
+            if validate_ssh_port "$NEW_SSH_PORT";then
                 break
+            else
+                echo "Недопустимый порт. Порт должен быть в диапазоне от 1024 до 65535."
+                NEW_SSH_PORT=""
             fi
         done
         run_command "sudo sed -i 's/#Port 22/Port $NEW_SSH_PORT/' /etc/ssh/sshd_config"
@@ -348,10 +350,10 @@ function secure_vps() {
     fi
 
     # Настройка ufw
-    if [ -z "$CONFIGURE_UFW" ]; then
+    if [ -z "$CONFIGURE_UFW" ];then
         CONFIGURE_UFW=$(prompt_yes_no "Хотите настроить ufw?")
     fi
-    if [ "$CONFIGURE_UFW" == "yes" ]; then
+    if [ "$CONFIGURE_UFW" == "yes" ];then
         run_command "sudo apt install -yq ufw"
         echo "y" | run_command "sudo ufw allow $CURRENT_SSH_PORT/tcp"
         echo "y" | run_command "sudo ufw enable"
@@ -359,10 +361,10 @@ function secure_vps() {
     fi
 
     # Настройка fail2ban
-    if [ -z "$CONFIGURE_FAIL2BAN" ]; then
+    if [ -z "$CONFIGURE_FAIL2BAN" ];then
         CONFIGURE_FAIL2BAN=$(prompt_yes_no "Хотите настроить fail2ban?")
     fi
-    if [ "$CONFIGURE_FAIL2BAN" == "yes" ]; then
+    if [ "$CONFIGURE_FAIL2BAN" == "yes" ];then
         run_command "sudo apt install -yq fail2ban"
         run_command "sudo systemctl enable fail2ban"
         run_command "sudo systemctl start fail2ban"
@@ -381,17 +383,17 @@ EOT'"
     # Остановка qemu-guest-agent и других сервисов
     SERVICES=("qemu-guest-agent")
     for service in "${SERVICES[@]}"; do
-        if dpkg -l | grep -qw "$service"; then
+        if dpkg -l | grep -qw "$service";then
             SERVICE_STATUS=$(run_command "sudo systemctl is-active $service")
-            if [ "$SERVICE_STATUS" == "active" ]; then
-                if STOP_SERVICE=$(prompt_yes_no "$service установлен и активен. Хотите остановить и отключить его?"); then
+            if [ "$SERVICE_STATUS" == "active" ];then
+                if STOP_SERVICE=$(prompt_yes_no "$service установлен и активен. Хотите остановить и отключить его?");then
                     run_command "sudo systemctl stop $service"
                     run_command "sudo systemctl disable $service"
                     run_command "sudo systemctl mask $service"
                     echo "$service остановлен, отключен и замаскирован."
                 fi
             else
-                if START_SERVICE=$(prompt_yes_no "$service установлен, но не активен. Хотите включить его?"); then
+                if START_SERVICE=$(prompt_yes_no "$service установлен, но не активен. Хотите включить его?");then
                     run_command "sudo systemctl unmask $service"
                     run_command "sudo systemctl enable $service"
                     run_command "sudo systemctl start $service"
@@ -406,14 +408,14 @@ EOT'"
 function main() {
     read -p "Выберите режим работы (local/ssh): " MODE
 
-    if [ "$MODE" == "ssh" ]; then
-        if [ -z "$SSH_HOST" ]; then
+    if [ "$MODE" == "ssh" ];then
+        if [ -z "$SSH_HOST" ];then
             read -p "Введите хост SSH: " SSH_HOST
         fi
-        if [ -z "$SSH_USER" ]; then
+        if [ -z "$SSH_USER" ];then
             read -p "Введите имя пользователя SSH: " SSH_USER
         fi
-        if [ -z "$SSH_PASSWORD" ]; then
+        if [ -z "$SSH_PASSWORD" ];then
             read -s -p "Введите пароль SSH: " SSH_PASSWORD
             echo
         fi
