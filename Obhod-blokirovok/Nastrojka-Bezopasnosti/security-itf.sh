@@ -371,4 +371,4 @@ function main() {
     secure_vps
 }
 
-main
+secure_vps
