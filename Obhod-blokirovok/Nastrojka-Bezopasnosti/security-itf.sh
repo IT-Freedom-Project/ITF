@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Скрипт для настройки безопасности VPS от IT Freedom Project (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube) "
+echo "Скрипт для настройки безопасности VPS от IT Freedom Project (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube)"
 
 # Переменные для SSH подключения (можно оставить пустыми для запроса при выполнении скрипта)
 SSH_HOST=""
@@ -144,6 +144,15 @@ function create_user() {
     echo "Пользователь $username создан."
 }
 
+# Функция для перезапуска SSH службы с учетом версии Ubuntu
+function restart_ssh_service() {
+    if run_command "systemctl list-units --type=service | grep -q sshd.service"; then
+        run_command "sudo systemctl restart sshd"
+    else
+        run_command "sudo systemctl restart ssh"
+    fi
+}
+
 # Функция для настройки безопасности на VPS
 function secure_vps() {
     # Обновление системы
@@ -180,7 +189,7 @@ function secure_vps() {
                 fi
                 read -s -p "Повторите новый пароль для root: " ROOT_PASSWORD_CONFIRM
                 echo
-                if [ "$ROOT_PASSWORD" != "$ROOT_PASSWORD_CONFIRM" ]; then
+                if [ "$ROOT_PASSWORD" != "$ROOT_PASSWORD_CONFIRM" ];then
                     echo "Пароли не совпадают. Попробуйте снова."
                     ROOT_PASSWORD=""
                     continue
@@ -258,14 +267,14 @@ function secure_vps() {
         read -p "Вход root по SSH отключен. Хотите включить вход root по SSH? (yes/no): " ENABLE_ROOT_SSH
         if [ "$ENABLE_ROOT_SSH" == "yes" ]; then
             run_command "sudo sed -i 's/PermitRootLogin no/PermitRootLogin yes/' /etc/ssh/sshd_config"
-            run_command "sudo systemctl restart sshd"
+            restart_ssh_service
             echo "Вход root по SSH включен."
         fi
     else
         read -p "Хотите отключить вход root по SSH? (yes/no): " DISABLE_ROOT_SSH
         if [ "$DISABLE_ROOT_SSH" == "yes" ]; then
             run_command "sudo sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config"
-            run_command "sudo systemctl restart sshd"
+            restart_ssh_service
             echo "Вход root по SSH отключен."
         fi
     fi
@@ -280,7 +289,7 @@ function secure_vps() {
             read -p "Введите новый порт SSH: " NEW_SSH_PORT
         fi
         run_command "sudo sed -i 's/#Port 22/Port $NEW_SSH_PORT/' /etc/ssh/sshd_config"
-        run_command "sudo systemctl restart sshd"
+        restart_ssh_service
         echo "Порт SSH изменен на $NEW_SSH_PORT."
         CURRENT_SSH_PORT=$NEW_SSH_PORT
     fi
@@ -362,5 +371,4 @@ function main() {
     secure_vps
 }
 
-#main
-secure_vps
+main
