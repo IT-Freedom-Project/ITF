@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Скрипт для настройки безопасности VPS от IT Freedom Project v0.81 (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube)"
+echo "Скрипт для настройки безопасности VPS от IT Freedom Project v0.82 (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube)"
 
 # Переменные для SSH подключения (можно оставить пустыми для запроса при выполнении скрипта)
 SSH_HOST=""
@@ -337,13 +337,18 @@ function secure_vps() {
                 read -p "Введите новый порт SSH (от 1024 до 65535): " NEW_SSH_PORT
             fi
             if validate_ssh_port "$NEW_SSH_PORT";then
+                # Убедимся, что строка Port существует и меняем её, если нет, добавляем её
+                if run_command "grep -q '^Port' /etc/ssh/sshd_config"; then
+                    run_command "sudo sed -i 's/^Port.*/Port $NEW_SSH_PORT/' /etc/ssh/sshd_config"
+                else
+                    run_command "echo 'Port $NEW_SSH_PORT' | sudo tee -a /etc/ssh/sshd_config"
+                fi
                 break
             else
                 echo "Недопустимый порт. Порт должен быть в диапазоне от 1024 до 65535."
                 NEW_SSH_PORT=""
             fi
         done
-        run_command "sudo sed -i 's/#Port 22/Port $NEW_SSH_PORT/' /etc/ssh/sshd_config"
         restart_ssh_service
         echo "Порт SSH изменен на $NEW_SSH_PORT."
         CURRENT_SSH_PORT=$NEW_SSH_PORT
@@ -412,10 +417,10 @@ function main() {
         if [ -z "$SSH_HOST" ];then
             read -p "Введите хост SSH: " SSH_HOST
         fi
-        if [ -z "$SSH_USER" ];then
+        if [ -з "$SSH_USER" ];then
             read -p "Введите имя пользователя SSH: " SSH_USER
         fi
-        if [ -z "$SSH_PASSWORD" ];then
+        if [ -з "$SSH_PASSWORD" ];then
             read -s -p "Введите пароль SSH: " SSH_PASSWORD
             echo
         fi
