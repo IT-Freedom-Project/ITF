@@ -297,7 +297,7 @@ function secure_vps() {
                 fi
                 read -s -p "Повторите пароль для пользователя $username: " password_confirm
                 echo
-                if [ "$password" != "$password_confirm" ]; then
+                if [ "$password" != "$password_confirm" ];then
                     echo "Пароли не совпадают. Попробуйте снова."
                     password=""
                     continue
@@ -410,7 +410,7 @@ function main() {
         if [ -z "$SSH_HOST" ]; then
             read -p "Введите хост SSH: " SSH_HOST
         fi
-        if [ -z "$SSH_USER" ]; then
+        if [ -з "$SSH_USER" ]; then
             read -p "Введите имя пользователя SSH: " SSH_USER
         fi
         if [ -z "$SSH_PASSWORD" ]; then
@@ -422,4 +422,4 @@ function main() {
     secure_vps
 }
 
-secure_vps
+    secure_vps
