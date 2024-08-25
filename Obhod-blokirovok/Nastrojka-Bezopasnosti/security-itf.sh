@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Скрипт для настройки безопасности VPS от IT Freedom Project v0.80(https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube)"
+echo "Скрипт для настройки безопасности VPS от IT Freedom Project v0.81 (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube)"
 
 # Переменные для SSH подключения (можно оставить пустыми для запроса при выполнении скрипта)
 SSH_HOST=""
