@@ -64,26 +64,37 @@ function validate_username() {
 # Функция для проверки пароля
 function validate_password() {
     local password=$1
+    local valid=true
+
     if [[ ${#password} -lt 16 ]]; then
         echo "Пароль должен быть не менее 16 символов."
-        return 1
+        valid=false
     fi
-    if ! [[ "$password" =~ [a-z] || "$password" =~ [а-я] ]]; then
+
+    if ! echo "$password" | grep -qP "[a-zа-я]"; then
         echo "Пароль должен содержать хотя бы одну букву нижнего регистра (латинскую или русскую)."
-        return 1
+        valid=false
     fi
-    if ! [[ "$password" =~ [A-Z] || "$password" =~ [А-Я] ]]; then
+
+    if ! echo "$password" | grep -qP "[A-ZА-Я]"; then
         echo "Пароль должен содержать хотя бы одну букву верхнего регистра (латинскую или русскую)."
-        return 1
+        valid=false
     fi
-    if ! [[ "$password" =~ [0-9] ]]; then
+
+    if ! echo "$password" | grep -qP "[0-9]"; then
         echo "Пароль должен содержать хотя бы одну цифру."
-        return 1
+        valid=false
     fi
-    if ! [[ "$password" =~ [[:punct:]] ]]; then
+
+    if ! echo "$password" | grep -qP "[[:punct:]]"; then
         echo "Пароль должен содержать хотя бы один специальный символ."
+        valid=false
+    fi
+
+    if ! $valid; then
         return 1
     fi
+
     return 0
 }
 
