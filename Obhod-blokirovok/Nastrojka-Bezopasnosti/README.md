@@ -86,6 +86,6 @@ echo '<username> ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/<username>
 
    Нажмите Ctrl + O, Enter, Ctrl + X чтобы сохранить изменения.
    
-  Перезапустите службу SSH:
-  sudo systemctl restart sshd || sudo systemctl restart ssh
+   Перезапустите службу SSH:
+   sudo systemctl restart sshd || sudo systemctl restart ssh
   
