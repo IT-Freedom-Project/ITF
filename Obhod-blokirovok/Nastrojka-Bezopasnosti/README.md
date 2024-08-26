@@ -89,42 +89,42 @@ echo 'username ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/username
    Перезапустите службу SSH: \
    sudo systemctl restart sshd || sudo systemctl restart ssh
 
-8. Настройка UFW (Firewall):
-   Установите UFW:
+8. Настройка UFW (Firewall):\
+   Установите UFW:\
    sudo apt install -y ufw
    
-   Разрешите новый порт SSH (напишите номер порта вместо ssh_port) и другие необходимые порты:
+   Разрешите новый порт SSH (напишите номер порта вместо ssh_port) и другие необходимые порты:\
    sudo ufw allow ssh_port/tcp
    
-   Включите UFW:
+   Включите UFW:\
    sudo ufw enable
 
-   Проверьте статус UFW:
+   Проверьте статус UFW:\
    sudo ufw status
    
-10. Установка и настройка Fail2ban:
-    Установите Fail2ban:
+10. Установка и настройка Fail2ban:\
+    Установите Fail2ban:\
     sudo apt install -y fail2ban
 
-    Настройте Fail2ban для защиты SSH:
+    Настройте Fail2ban для защиты SSH:\
     sudo nano /etc/fail2ban/jail.local
 
-    Добавьте следующие строки в файл:
-    [sshd]
-    enabled = true
-    port = 2222  # Ваш новый порт SSH
-    filter = sshd
-    logpath = /var/log/auth.log
+    Добавьте следующие строки в файл:\
+    [sshd]\
+    enabled = true\
+    port = 2222  # Ваш новый порт SSH\
+    filter = sshd\
+    logpath = /var/log/auth.log\
     maxretry = 5
 
     Сохраните файл и закройте редактор.
 
-    Перезапустите Fail2ban:
+    Перезапустите Fail2ban:\
     sudo systemctl restart fail2ban
 
-11. Остановка qemu-guest-agent и других нежелательных сервисов
-    Остановите и отключите qemu-guest-agent (если установлен):
-    sudo systemctl stop qemu-guest-agent
-    sudo systemctl disable qemu-guest-agent
+11. Остановка qemu-guest-agent и других нежелательных сервисов\
+    Остановите и отключите qemu-guest-agent (если установлен):\
+    sudo systemctl stop qemu-guest-agent\
+    sudo systemctl disable qemu-guest-agent\
     sudo systemctl mask qemu-guest-agent
   
