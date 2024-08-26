@@ -112,7 +112,7 @@
     ```sudo nano /etc/fail2ban/jail.local```
 
     Добавьте следующие строки в файл:\
-    ```[sshd]\```
+    ```[sshd]```\
     ```enabled = true```\
     ```port = 2222  # Ваш новый порт SSH```\
     ```filter = sshd```\
