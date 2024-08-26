@@ -43,25 +43,25 @@
 А теперь если настраиваем безопасность руками, а не скриптом:
 
 1. Обновляем систему:\
-sudo apt update \
-sudo apt upgrade -y
+```sudo apt update``` \
+```sudo apt upgrade -y```
 
 2. Меняем пароль root:\
-sudo passwd root
+```sudo passwd root```
 
 3. Создаём нового пользователя (напишите имя вместо <username>):\
-sudo adduser username
+```sudo adduser username```
 
 4. Добавьте пользователя в группу sudo, чтобы он мог выполнять команды от имени суперпользователя (напишите имя вместо username):\
-sudo usermod -aG sudo username
+```sudo usermod -aG sudo username```
 
 5. Если вы хотите разрешить пользователю выполнять команды без ввода пароля (напишите имя вместо username):\
-echo 'username ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/username
+```echo 'username ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/username```
 
 6. Отключение или включение доступа root по SSH:
 
    Откройте файл конфигурации SSH:\
-   sudo nano /etc/ssh/sshd_config
+   ```sudo nano /etc/ssh/sshd_config```
 
    Найдите строку PermitRootLogin и измените её значение на no, чтобы отключить доступ root по SSH:\
    PermitRootLogin no
@@ -72,14 +72,14 @@ echo 'username ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/username
    Нажмите Ctrl + O, Enter, Ctrl + X чтобы сохранить изменения.
 
    Перезапустите службу SSH:\
-   sudo systemctl restart sshd || sudo systemctl restart ssh
+   ```sudo systemctl restart sshd || sudo systemctl restart ssh```
 
 7. Изменение порта SSH:
    Отключите UFW (если он активен) перед изменением порта:\
-   sudo ufw disable
+   ```sudo ufw disable```
 
    Откройте файл конфигурации SSH:\
-   sudo nano /etc/ssh/sshd_config
+   ```sudo nano /etc/ssh/sshd_config```
 
    Найдите или добавьте строку Port и установите нужный вам порт (напишите номер порта вместо new_port):\
    Port new_port
@@ -87,29 +87,29 @@ echo 'username ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/username
    Нажмите Ctrl + O, Enter, Ctrl + X чтобы сохранить изменения.
    
    Перезапустите службу SSH: \
-   sudo systemctl restart sshd || sudo systemctl restart ssh
+   ```sudo systemctl restart sshd || sudo systemctl restart ssh```
 
 8. Настройка UFW (Firewall):
    
    Установите UFW:\
-   sudo apt install -y ufw
+   ```sudo apt install -y ufw```
    
    Разрешите новый порт SSH (напишите номер порта вместо ssh_port) и другие необходимые порты:\
-   sudo ufw allow ssh_port/tcp
+   ```sudo ufw allow ssh_port/tcp```
    
    Включите UFW:\
-   sudo ufw enable
+   ```sudo ufw enable```
 
    Проверьте статус UFW:\
-   sudo ufw status
+   ```sudo ufw status```
    
 10. Установка и настройка Fail2ban:
     
     Установите Fail2ban:\
-    sudo apt install -y fail2ban
+    ```sudo apt install -y fail2ban```
 
     Настройте Fail2ban для защиты SSH:\
-    sudo nano /etc/fail2ban/jail.local
+    ```sudo nano /etc/fail2ban/jail.local```
 
     Добавьте следующие строки в файл:\
     [sshd]\
@@ -122,12 +122,12 @@ echo 'username ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/username
     Нажмите Ctrl + O, Enter, Ctrl + X чтобы сохранить изменения.
 
     Перезапустите Fail2ban:\
-    sudo systemctl restart fail2ban
+    ```sudo systemctl restart fail2ban```
 
 12. Остановка qemu-guest-agent и других нежелательных сервисов:
     
     Остановите и отключите qemu-guest-agent (если установлен):\
-    sudo systemctl stop qemu-guest-agent\
-    sudo systemctl disable qemu-guest-agent\
-    sudo systemctl mask qemu-guest-agent
+    ```sudo systemctl stop qemu-guest-agent```\
+    ```sudo systemctl disable qemu-guest-agent```\
+    ```sudo systemctl mask qemu-guest-agent```
   
