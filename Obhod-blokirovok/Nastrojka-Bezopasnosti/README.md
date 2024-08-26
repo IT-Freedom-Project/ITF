@@ -64,10 +64,10 @@
    ```sudo nano /etc/ssh/sshd_config```
 
    Найдите строку PermitRootLogin и измените её значение на no, чтобы отключить доступ root по SSH:\
-   PermitRootLogin no
+   ```PermitRootLogin no```
 
    Или на yes, чтобы включить доступ root по SSH:\
-   PermitRootLogin yes
+   ```PermitRootLogin yes```
 
    Нажмите Ctrl + O, Enter, Ctrl + X чтобы сохранить изменения.
 
@@ -82,7 +82,7 @@
    ```sudo nano /etc/ssh/sshd_config```
 
    Найдите или добавьте строку Port и установите нужный вам порт (напишите номер порта вместо new_port):\
-   Port new_port
+   ```Port new_port```
 
    Нажмите Ctrl + O, Enter, Ctrl + X чтобы сохранить изменения.
    
@@ -112,12 +112,12 @@
     ```sudo nano /etc/fail2ban/jail.local```
 
     Добавьте следующие строки в файл:\
-    [sshd]\
-    enabled = true\
-    port = 2222  # Ваш новый порт SSH\
-    filter = sshd\
-    logpath = /var/log/auth.log\
-    maxretry = 5
+    ```[sshd]\```
+    ```enabled = true```\
+    ```port = 2222  # Ваш новый порт SSH```\
+    ```filter = sshd```\
+    ```logpath = /var/log/auth.log```\
+    ```maxretry = 5``` 
 
     Нажмите Ctrl + O, Enter, Ctrl + X чтобы сохранить изменения.
 
