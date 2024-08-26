@@ -81,11 +81,50 @@ echo 'username ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/username
    Откройте файл конфигурации SSH:\
    sudo nano /etc/ssh/sshd_config
 
-   Найдите или добавьте строку Port и установите нужный вам порт (например, 2222):\
-   Port 2222
+   Найдите или добавьте строку Port и установите нужный вам порт (напишите номер порта вместо new_port):\
+   Port new_port
 
    Нажмите Ctrl + O, Enter, Ctrl + X чтобы сохранить изменения.
    
    Перезапустите службу SSH: \
    sudo systemctl restart sshd || sudo systemctl restart ssh
+
+8. Настройка UFW (Firewall):
+   Установите UFW:
+   sudo apt install -y ufw
+   
+   Разрешите новый порт SSH (напишите номер порта вместо ssh_port) и другие необходимые порты:
+   sudo ufw allow ssh_port/tcp
+   
+   Включите UFW:
+   sudo ufw enable
+
+   Проверьте статус UFW:
+   sudo ufw status
+   
+10. Установка и настройка Fail2ban:
+    Установите Fail2ban:
+    sudo apt install -y fail2ban
+
+    Настройте Fail2ban для защиты SSH:
+    sudo nano /etc/fail2ban/jail.local
+
+    Добавьте следующие строки в файл:
+    [sshd]
+    enabled = true
+    port = 2222  # Ваш новый порт SSH
+    filter = sshd
+    logpath = /var/log/auth.log
+    maxretry = 5
+
+    Сохраните файл и закройте редактор.
+
+    Перезапустите Fail2ban:
+    sudo systemctl restart fail2ban
+
+11. Остановка qemu-guest-agent и других нежелательных сервисов
+    Остановите и отключите qemu-guest-agent (если установлен):
+    sudo systemctl stop qemu-guest-agent
+    sudo systemctl disable qemu-guest-agent
+    sudo systemctl mask qemu-guest-agent
   
