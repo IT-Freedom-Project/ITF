@@ -142,7 +142,6 @@
     ```sudo systemctl mask qemu-guest-agent```
     
     Или включите его обратно:\
-
     ```sudo systemctl unmask qemu-guest-agent```\
     ```sudo systemctl enable qemu-guest-agent```\
     ```sudo systemctl start qemu-guest-agent```
