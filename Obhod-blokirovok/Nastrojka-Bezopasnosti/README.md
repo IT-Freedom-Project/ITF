@@ -56,8 +56,7 @@ sudo adduser <username>
 sudo usermod -aG sudo <username>
 
 5. Если вы хотите разрешить пользователю выполнять команды без ввода пароля (напишите имя вместо <username>): 
-
-echo '<username> ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/<username>
+\*echo '<username> ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/<username>\*
 
 6. Отключение или включение доступа root по SSH:
 
