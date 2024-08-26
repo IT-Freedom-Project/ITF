@@ -42,50 +42,50 @@
 
 А теперь если настраиваем безопасность руками, а не скриптом:
 
-1. Обновляем систему:
-sudo apt update
+1. Обновляем систему:\
+sudo apt update \
 sudo apt upgrade -y
 
-2. Меняем пароль root:
+2. Меняем пароль root:\
 sudo passwd root
 
-3. Создаём нового пользователя (напишите имя вместо <username>):
-sudo adduser <username>
+3. Создаём нового пользователя (напишите имя вместо <username>):\
+sudo adduser username
 
-4. Добавьте пользователя в группу sudo, чтобы он мог выполнять команды от имени суперпользователя (напишите имя вместо <username>):
-sudo usermod -aG sudo <username>
+4. Добавьте пользователя в группу sudo, чтобы он мог выполнять команды от имени суперпользователя (напишите имя вместо username):\
+sudo usermod -aG sudo username
 
-5. Если вы хотите разрешить пользователю выполнять команды без ввода пароля (напишите имя вместо <username>): 
-echo '<username> ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/<username>
+5. Если вы хотите разрешить пользователю выполнять команды без ввода пароля (напишите имя вместо username):\
+echo 'username ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/username
 
 6. Отключение или включение доступа root по SSH:
 
-   Откройте файл конфигурации SSH:
+   Откройте файл конфигурации SSH:\
    sudo nano /etc/ssh/sshd_config
 
-   Найдите строку PermitRootLogin и измените её значение на no, чтобы отключить доступ root по SSH:
+   Найдите строку PermitRootLogin и измените её значение на no, чтобы отключить доступ root по SSH:\
    PermitRootLogin no
 
-   Или на yes, чтобы включить доступ root по SSH:
+   Или на yes, чтобы включить доступ root по SSH:\
    PermitRootLogin yes
 
    Нажмите Ctrl + O, Enter, Ctrl + X чтобы сохранить изменения.
 
-   Перезапустите службу SSH:
+   Перезапустите службу SSH:\
    sudo systemctl restart sshd || sudo systemctl restart ssh
 
 7. Изменение порта SSH:
-   Отключите UFW (если он активен) перед изменением порта:
+   Отключите UFW (если он активен) перед изменением порта:\
    sudo ufw disable
 
-   Откройте файл конфигурации SSH:
+   Откройте файл конфигурации SSH:\
    sudo nano /etc/ssh/sshd_config
 
-   Найдите или добавьте строку Port и установите нужный вам порт (например, 2222):
+   Найдите или добавьте строку Port и установите нужный вам порт (например, 2222):\
    Port 2222
 
    Нажмите Ctrl + O, Enter, Ctrl + X чтобы сохранить изменения.
    
-   Перезапустите службу SSH:
+   Перезапустите службу SSH: \
    sudo systemctl restart sshd || sudo systemctl restart ssh
   
