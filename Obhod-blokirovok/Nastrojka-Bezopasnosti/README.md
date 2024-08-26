@@ -89,7 +89,8 @@ echo 'username ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/username
    Перезапустите службу SSH: \
    sudo systemctl restart sshd || sudo systemctl restart ssh
 
-8. Настройка UFW (Firewall):\
+8. Настройка UFW (Firewall):
+   
    Установите UFW:\
    sudo apt install -y ufw
    
@@ -102,7 +103,8 @@ echo 'username ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/username
    Проверьте статус UFW:\
    sudo ufw status
    
-10. Установка и настройка Fail2ban:\
+10. Установка и настройка Fail2ban:
+    
     Установите Fail2ban:\
     sudo apt install -y fail2ban
 
@@ -117,12 +119,13 @@ echo 'username ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/username
     logpath = /var/log/auth.log\
     maxretry = 5
 
-    Сохраните файл и закройте редактор.
+    Нажмите Ctrl + O, Enter, Ctrl + X чтобы сохранить изменения.
 
     Перезапустите Fail2ban:\
     sudo systemctl restart fail2ban
 
-11. Остановка qemu-guest-agent и других нежелательных сервисов\
+12. Остановка qemu-guest-agent и других нежелательных сервисов:
+    
     Остановите и отключите qemu-guest-agent (если установлен):\
     sudo systemctl stop qemu-guest-agent\
     sudo systemctl disable qemu-guest-agent\
