@@ -52,26 +52,29 @@
 
 2. Меняем пароль root:\
 ```sudo passwd root```
+
    Два раза введите пароль.
 
-3. Создаём нового пользователя (напишите имя вместо USERNAME):\
+4. Создаём нового пользователя (напишите имя вместо USERNAME):\
 ```sudo adduser --gecos "" USERNAME```
+
    Два раза введите пароль.
 
    Для смены пароля существующего пользователя (напишите имя вместо USERNAME):\
    ```sudo passwd USERNAME```
+   
    Два раза введите пароль.
 
-5. Добавьте пользователя в группу sudo, чтобы он мог выполнять команды от имени суперпользователя (напишите имя вместо USERNAME):\
+6. Добавьте пользователя в группу sudo, чтобы он мог выполнять команды от имени суперпользователя (напишите имя вместо USERNAME):\
 ```sudo usermod -aG sudo USERNAME```
 
-6. Если вы хотите разрешить пользователю выполнять команды без ввода пароля (напишите имя вместо USERNAME):\
+7. Если вы хотите разрешить пользователю выполнять команды без ввода пароля (напишите имя вместо USERNAME):\
 ```echo 'USERNAME ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/USERNAME```
 
    Если хотите запретить опять:\
    ```sudo rm /etc/sudoers.d/USERNAME```
 
-7. Отключение или включение доступа root по SSH:
+8. Отключение или включение доступа root по SSH:
 
    Откройте файл конфигурации SSH:\
    ```sudo nano /etc/ssh/sshd_config```
@@ -87,7 +90,7 @@
    Перезапустите службу SSH:\
    ```sudo systemctl restart sshd || sudo systemctl restart ssh```
 
-8. Изменение порта SSH:
+9. Изменение порта SSH:
    Отключите UFW (если он активен) перед изменением порта:\
    ```sudo ufw disable```
 
@@ -102,7 +105,7 @@
    Перезапустите службу SSH: \
    ```sudo systemctl restart sshd || sudo systemctl restart ssh```
 
-9. Настройка UFW (Firewall):
+10. Настройка UFW (Firewall):
    
    Установите UFW:\
    ```sudo apt install -y ufw```
@@ -116,7 +119,7 @@
    Проверьте статус UFW:\
    ```sudo ufw status```
    
-10. Установка и настройка Fail2ban:
+11. Установка и настройка Fail2ban:
     
     Установите Fail2ban:\
     ```sudo apt install -y fail2ban```
@@ -137,7 +140,7 @@
     Перезапустите Fail2ban:\
     ```sudo systemctl restart fail2ban```
 
-11. Остановка qemu-guest-agent (по желанию, вы должны понимать все плюсы и минусы):
+12. Остановка qemu-guest-agent (по желанию, вы должны понимать все плюсы и минусы):
     
     Остановите и отключите qemu-guest-agent (если установлен):\
     ```sudo systemctl stop qemu-guest-agent```\
@@ -148,5 +151,11 @@
     ```sudo systemctl unmask qemu-guest-agent```\
     ```sudo systemctl enable qemu-guest-agent```\
     ```sudo systemctl start qemu-guest-agent```
-  
+    
+  ## Как заходить на VPS после настройки безопасности:
+
+ Вы должны указать вместо root имя созданного пользователя и порт. Например:
+ 
+ ssh testuser@123.123.123.123 -p34567
+
   
