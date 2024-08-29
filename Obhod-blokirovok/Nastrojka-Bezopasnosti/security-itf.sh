@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Скрипт для настройки безопасности VPS от IT Freedom Project v0.82 (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube)"
+echo "Скрипт для настройки безопасности VPS от IT Freedom Project v1.0 (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube)"
 
 # Переменные для SSH подключения (можно оставить пустыми для запроса при выполнении скрипта)
 SSH_HOST=""
@@ -66,8 +66,8 @@ function validate_password() {
     local password=$1
     local valid=true
 
-    if [[ ${#password} -lt 16 ]]; then
-        echo "Пароль должен быть не менее 16 символов."
+    if [[ ${#password} -lt 12 ]]; then
+        echo "Пароль должен быть не менее 12 символов."
         valid=false
     fi
 
