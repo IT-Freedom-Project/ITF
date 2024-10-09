@@ -1,6 +1,8 @@
 #!/bin/bash
 echo "Скрипт для настройки безопасности VPS от IT Freedom Project v1.0 (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube)"
 
+#!/bin/bash
+
 # Переменные для SSH подключения (можно оставить пустыми для запроса при выполнении скрипта)
 SSH_HOST=""
 SSH_USER=""
@@ -303,9 +305,8 @@ function secure_vps() {
                 fi
                 break
             done
-            if nopass=$(prompt_yes_no "Разрешить выполнение команд без пароля для $username?"); then
-                create_user "$username" "$password" "$nopass"
-            fi
+            nopass=$(prompt_yes_no "Разрешить выполнение команд без пароля для $username?")
+            create_user "$username" "$password" "$nopass"
         fi
     done
 
@@ -417,10 +418,10 @@ function main() {
         if [ -z "$SSH_HOST" ];then
             read -p "Введите хост SSH: " SSH_HOST
         fi
-        if [ -з "$SSH_USER" ];then
+        if [ -z "$SSH_USER" ];then
             read -p "Введите имя пользователя SSH: " SSH_USER
         fi
-        if [ -з "$SSH_PASSWORD" ];then
+        if [ -z "$SSH_PASSWORD" ];then
             read -s -p "Введите пароль SSH: " SSH_PASSWORD
             echo
         fi
@@ -430,3 +431,4 @@ function main() {
 }
 
 secure_vps
+
