@@ -91,7 +91,12 @@ fi
 # 4. Проверяем, существует ли уже ключ
 ###################
 if [ -f "$KEY_NAME" ]; then
-  echo "Ключ с именем $KEY_NAME ($KEY_TYPE) уже существует."
+  # Пытаемся определить тип по публичному ключу
+  REAL_TYPE=$(ssh-keygen -lf "${KEY_NAME}.pub" 2>/dev/null | awk '{print $4}')
+  # Если не вышло (нет .pub?), подставим "unknown"
+  REAL_TYPE=${REAL_TYPE:-"unknown"}
+
+  echo "Ключ с именем $KEY_NAME $REAL_TYPE уже существует."
   echo "Выберите действие:"
   echo "1) Ввести другое имя"
   echo "2) Отменить создание ключа"
