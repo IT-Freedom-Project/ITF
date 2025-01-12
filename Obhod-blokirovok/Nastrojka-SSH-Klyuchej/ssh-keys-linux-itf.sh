@@ -1,25 +1,59 @@
 #!/bin/bash
 
-# Убедимся, что скрипт выполняется не от root
+##############################################################################
+# Универсальный скрипт для Debian/Ubuntu и CentOS/RHEL/Fedora.
+# 1. Проверяет, что скрипт не запущен от root.
+# 2. Проверяет, установлен ли 'ssh'. Если нет — пытается установить через
+#    apt-get (Debian/Ubuntu) или dnf/yum (CentOS/RHEL/Fedora).
+# 3. Создаёт/управляет SSH-ключами (без вопроса "Хотите ли вы пароль?"; 
+#    просто предлагает ввести — пустая строка = без пароля).
+# 4. "ssh-copy-id" или альтернативный метод (через cat >> authorized_keys).
+# 5. Настраивает "PasswordAuthentication" на удалённом сервере (если нужно).
+##############################################################################
+
+######################
+# 1. Защита от запуска скрипта от root
+######################
 if [ "$EUID" -eq 0 ]; then
-  echo "Пожалуйста, запустите этот скрипт не от имени root."
+  echo "Пожалуйста, запустите этот скрипт НЕ от имени root."
   exit 1
 fi
 
-# Проверяем, установлен ли ssh
+######################
+# 2. Проверяем, есть ли 'ssh'. Если нет, пытаемся установить.
+######################
 if ! command -v ssh >/dev/null 2>&1; then
-  echo "Команда 'ssh' не найдена. Попробуем установить openssh-client..."
-  sudo apt-get update && sudo apt-get install -y openssh-client
-  if [ $? -ne 0 ]; then
-    echo "Не удалось установить openssh-client. Завершение."
+  echo "Команда 'ssh' не найдена. Попробуем установить..."
+
+  # Определяем, какой пакетный менеджер у нас есть
+  if command -v apt-get >/dev/null 2>&1; then
+    # Для Debian/Ubuntu
+    echo "Обнаружен apt-get. Ставим 'openssh-client'..."
+    sudo apt-get update && sudo apt-get install -y openssh-client
+  elif command -v dnf >/dev/null 2>&1; then
+    # Для Fedora, RHEL 8+, CentOS 8+
+    echo "Обнаружен dnf. Ставим 'openssh-clients'..."
+    sudo dnf install -y openssh-clients
+  elif command -v yum >/dev/null 2>&1; then
+    # Для RHEL/CentOS 7 и старее
+    echo "Обнаружен yum. Ставим 'openssh-clients'..."
+    sudo yum install -y openssh-clients
+  else
+    echo "Не удалось обнаружить пакетный менеджер (apt-get/dnf/yum)."
+    echo "Установите 'ssh' (openssh-client) вручную и повторите."
+    exit 1
+  fi
+
+  # Проверим, что установка прошла успешно
+  if ! command -v ssh >/dev/null 2>&1; then
+    echo "Не удалось установить 'ssh'. Завершение."
     exit 1
   fi
 fi
 
-# Упрощенный скрипт для создания и управления SSH-ключами
-# (ключ всегда передается на сервер, без проверок,
-#  а при настройке входа по паролю параметр PasswordAuthentication
-#  полностью удаляется и добавляется нужное значение)
+##############################################################################
+# 3. Основная логика управления ключами
+##############################################################################
 
 # Запрашиваем тип ключа
 echo "Выберите тип ключа:"
@@ -44,7 +78,7 @@ if [[ "$KEY_TYPE" != "rsa" && "$KEY_TYPE" != "ed25519" ]]; then
   exit 1
 fi
 
-# Запрашиваем имя ключа
+# Запрашиваем имя файла ключа
 read -p "Введите имя файла для ключа (по умолчанию ~/.ssh/id_${KEY_TYPE}): " KEY_NAME
 KEY_NAME=${KEY_NAME:-~/.ssh/id_${KEY_TYPE}}
 
@@ -53,7 +87,9 @@ if [[ "$KEY_NAME" != /* && "$KEY_NAME" != ~/.ssh/* ]]; then
   KEY_NAME=~/.ssh/$KEY_NAME
 fi
 
-# Проверяем, существует ли уже ключ
+###################
+# 4. Проверяем, существует ли уже ключ
+###################
 if [ -f "$KEY_NAME" ]; then
   echo "Ключ с именем $KEY_NAME ($KEY_TYPE) уже существует."
   echo "Выберите действие:"
@@ -68,7 +104,8 @@ if [ -f "$KEY_NAME" ]; then
 
   case "$CHOICE" in
     1)
-      exec "$0"  # Перезапустить скрипт заново
+      # Перезапустить скрипт заново
+      exec "$0"
       ;;
     2)
       echo "Отмена создания ключа."
@@ -80,9 +117,9 @@ if [ -f "$KEY_NAME" ]; then
     4)
       echo "Изменение пароля для существующего ключа."
       while true; do
-        read -s -p "Введите новый пароль для ключа (Enter для пустого пароля): " NEW_PASSPHRASE
+        read -s -p "Введите новый пароль (Enter для пустого): " NEW_PASSPHRASE
         echo
-        read -s -p "Подтвердите новый пароль (Enter для пустого пароля): " CONFIRM_PASSPHRASE
+        read -s -p "Подтвердите пароль (Enter для пустого): " CONFIRM_PASSPHRASE
         echo
         if [[ "$NEW_PASSPHRASE" == "$CONFIRM_PASSPHRASE" ]]; then
           ssh-keygen -p -f "$KEY_NAME" -N "$NEW_PASSPHRASE"
@@ -95,29 +132,29 @@ if [ -f "$KEY_NAME" ]; then
           fi
           exit 0
         else
-          echo "Пароли не совпадают. Попробуйте снова."
+          echo "Пароли не совпадают. Повторите ввод."
         fi
       done
       ;;
     5)
       echo "Изменение комментария для существующего ключа."
-      read -p "Введите новый комментарий для ключа: " NEW_COMMENT
+      read -p "Введите новый комментарий: " NEW_COMMENT
       if [[ -n "$NEW_COMMENT" ]]; then
         ssh-keygen -c -f "$KEY_NAME" -C "$NEW_COMMENT"
         if [ $? -eq 0 ]; then
-          echo "Комментарий для ключа успешно изменен."
+          echo "Комментарий для ключа успешно изменён."
           ssh-add "$KEY_NAME"
           echo "Ключ добавлен в ssh-agent."
         else
-          echo "Ошибка при изменении комментария ключа."
+          echo "Ошибка при изменении комментария."
         fi
       else
-        echo "Комментарий не изменен."
+        echo "Пустой комментарий, ничего не меняем."
       fi
       exit 0
       ;;
     6)
-      # -- Всегда передаём ключ, без проверок --
+      # Передача уже существующего ключа
       echo "Передача ключа на сервер."
       read -p "Введите логин для сервера: " REMOTE_USER
       read -p "Введите IP-адрес сервера: " REMOTE_IP
@@ -130,30 +167,27 @@ if [ -f "$KEY_NAME" ]; then
         echo "Ключ успешно передан на сервер."
       else
         echo "Не удалось передать ключ через ssh-copy-id."
-        echo "Пробуем альтернативный способ..."
+        echo "Пробуем альтернативный способ (cat >> authorized_keys)..."
         cat "${KEY_NAME}.pub" | ssh -p "$REMOTE_PORT" "${REMOTE_USER}@${REMOTE_IP}" \
           "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
         if [ $? -eq 0 ]; then
-          echo "Ключ успешно передан на сервер альтернативным способом."
+          echo "Ключ успешно передан альтернативным способом."
         else
-          echo "Ошибка передачи ключа на сервер даже альтернативным способом. Проверьте данные подключения."
+          echo "Ошибка передачи ключа (оба способа)."
           exit 1
         fi
       fi
 
-      # Предлагаем управлять настройками входа по паролю
+      # Предлагаем управлять настройками входа по паролю (PasswordAuthentication)
       read -p "Хотите ли вы управлять настройками входа по паролю на сервере? [y/N]: " CHANGE_PASSAUTH
       CHANGE_PASSAUTH=${CHANGE_PASSAUTH,,}
       if [[ "$CHANGE_PASSAUTH" == "y" ]]; then
-        # Начинаем цикл, пока не будет правильного sudo-пароля
         while true; do
-          echo "Введите пароль для sudo на сервере (требуется для изменения /etc/ssh/sshd_config):"
+          echo "Введите пароль sudo на сервере:"
           read -s SUDO_PASS
 
-          # Проверяем, верный ли пароль (sudo -v проверяет, может ли sudo аутентифицироваться)
           ssh -p "$REMOTE_PORT" "${REMOTE_USER}@${REMOTE_IP}" \
             "echo \"$SUDO_PASS\" | sudo -S -v" 2>/dev/null
-
           if [ $? -eq 0 ]; then
             echo "Пароль принят."
             break
@@ -162,22 +196,19 @@ if [ -f "$KEY_NAME" ]; then
           fi
         done
 
-        # Узнаём текущее «фактическое» состояние PasswordAuthentication
+        # Проверяем текущее состояние
         CURRENT_PA=$(ssh -p "$REMOTE_PORT" "${REMOTE_USER}@${REMOTE_IP}" \
           "echo \"$SUDO_PASS\" | sudo -S sshd -T | grep '^passwordauthentication'")
-
         if echo "$CURRENT_PA" | grep -iq 'yes'; then
           echo "Сейчас вход по паролю ВКЛЮЧЕН."
         else
           echo "Сейчас вход по паролю ОТКЛЮЧЕН."
         fi
 
-        echo "Хотите включить (y) или отключить (n) вход по паролю? [y/n]:"
+        echo "Включить (y) или отключить (n) вход по паролю? [y/n]:"
         read -p "Ваш выбор: " TOGGLE
         TOGGLE=${TOGGLE,,}
-
         if [[ "$TOGGLE" == "y" ]]; then
-          # Включаем вход по паролю
           ssh -p "$REMOTE_PORT" "${REMOTE_USER}@${REMOTE_IP}" "
             echo \"$SUDO_PASS\" | sudo -S sed -i '/^[#[:space:]]*PasswordAuthentication/d' /etc/ssh/sshd_config
             echo \"$SUDO_PASS\" | sudo -S bash -c 'echo \"PasswordAuthentication yes\" >> /etc/ssh/sshd_config'
@@ -189,7 +220,6 @@ if [ -f "$KEY_NAME" ]; then
           "
           echo "Вход по паролю включен."
         elif [[ "$TOGGLE" == "n" ]]; then
-          # Отключаем вход по паролю
           ssh -p "$REMOTE_PORT" "${REMOTE_USER}@${REMOTE_IP}" "
             echo \"$SUDO_PASS\" | sudo -S sed -i '/^[#[:space:]]*PasswordAuthentication/d' /etc/ssh/sshd_config
             echo \"$SUDO_PASS\" | sudo -S bash -c 'echo \"PasswordAuthentication no\" >> /etc/ssh/sshd_config'
@@ -207,12 +237,12 @@ if [ -f "$KEY_NAME" ]; then
       exit 0
       ;;
     7)
-      echo "Добавление ключа в ssh-agent."
+      echo "Добавляем ключ в ssh-agent."
       ssh-add "$KEY_NAME"
       if [ $? -eq 0 ]; then
-        echo "Ключ успешно добавлен в ssh-agent."
+        echo "Ключ добавлен в ssh-agent."
       else
-        echo "Ошибка при добавлении ключа в ssh-agent."
+        echo "Ошибка при добавлении."
       fi
       exit 0
       ;;
@@ -223,39 +253,40 @@ if [ -f "$KEY_NAME" ]; then
   esac
 fi
 
-# Запрашиваем комментарий для нового ключа
-read -p "Введите описание для ключа (например, email или описание): " COMMENT
+######################
+# Создаём НОВЫЙ ключ (если его не было или выбрано перезаписать)
+######################
+read -p "Введите описание для ключа (например, email): " COMMENT
 COMMENT=${COMMENT:-"No Comment"}
 
-# Предлагаем ввести пароль для ключа (при пустом вводе не будет пароля)
-echo "Введите пароль для ключа (Enter, чтобы оставить без пароля): "
+echo "Введите пароль для ключа (Enter — без пароля):"
 read -s PASSPHRASE
 echo
-echo "Подтвердите пароль (Enter для пустого пароля): "
+echo "Подтвердите пароль (Enter — без пароля):"
 read -s CONFIRM_PASSPHRASE
 echo
 if [[ "$PASSPHRASE" != "$CONFIRM_PASSPHRASE" ]]; then
-  echo "Пароли не совпадают. Попробуйте снова."
+  echo "Пароли не совпадают. Завершение."
   exit 1
 fi
 
-# Генерация ключа
+echo "Генерация ключа SSH..."
 ssh-keygen -t "$KEY_TYPE" -C "$COMMENT" -f "$KEY_NAME" -N "$PASSPHRASE"
-
-# Проверяем успешность создания ключа
 if [ $? -eq 0 ]; then
   echo "SSH-ключ успешно создан:"
-  echo "- Приватный ключ: $KEY_NAME"
-  echo "- Публичный ключ: ${KEY_NAME}.pub"
+  echo "  Приватный ключ: $KEY_NAME"
+  echo "  Публичный ключ: ${KEY_NAME}.pub"
   ssh-add "$KEY_NAME"
   echo "Ключ добавлен в ssh-agent."
 else
-  echo "Ошибка при создании SSH-ключа."
+  echo "Ошибка при создании ключа."
   exit 1
 fi
 
-# Всегда предлагаем передать ключ на сервер
-read -p "Хотите ли вы передать ключ на сервер? [y/N]: " TRANSFER_KEY
+######################
+# Предлагаем сразу передать ключ на сервер
+######################
+read -p "Хотите передать ключ на сервер? [y/N]: " TRANSFER_KEY
 TRANSFER_KEY=${TRANSFER_KEY,,}
 if [[ "$TRANSFER_KEY" == "y" ]]; then
   read -p "Введите логин для сервера: " REMOTE_USER
@@ -266,32 +297,29 @@ if [[ "$TRANSFER_KEY" == "y" ]]; then
   echo "Передача ключа на сервер (ssh-copy-id)..."
   ssh-copy-id -i "$KEY_NAME" -p "$REMOTE_PORT" "${REMOTE_USER}@${REMOTE_IP}"
   if [ $? -eq 0 ]; then
-    echo "Ключ успешно передан на сервер."
+    echo "Ключ успешно передан."
   else
-    echo "Не удалось передать ключ через ssh-copy-id."
-    echo "Пробуем альтернативный способ..."
+    echo "ssh-copy-id не сработал. Пробуем альтернативу..."
     cat "${KEY_NAME}.pub" | ssh -p "$REMOTE_PORT" "${REMOTE_USER}@${REMOTE_IP}" \
       "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
     if [ $? -eq 0 ]; then
-      echo "Ключ успешно передан на сервер альтернативным способом."
+      echo "Ключ успешно передан альтернативным способом."
     else
-      echo "Ошибка передачи ключа на сервер даже альтернативным способом. Проверьте данные подключения."
+      echo "Ошибка передачи ключа (оба способа)."
       exit 1
     fi
   fi
 
-  # (Далее логика управления PasswordAuthentication, аналогично пункту 6)
-  read -p "Хотите ли вы управлять настройками входа по паролю на сервере? [y/N]: " CHANGE_PASSAUTH
+  # Предлагаем управлять PasswordAuthentication
+  read -p "Управлять настройками входа по паролю на сервере? [y/N]: " CHANGE_PASSAUTH
   CHANGE_PASSAUTH=${CHANGE_PASSAUTH,,}
   if [[ "$CHANGE_PASSAUTH" == "y" ]]; then
     while true; do
-      echo "Введите пароль для sudo на сервере (требуется для изменения /etc/ssh/sshd_config):"
+      echo "Введите sudo-пароль на сервере (для правки /etc/ssh/sshd_config):"
       read -s SUDO_PASS
 
-      # Проверяем пароль
       ssh -p "$REMOTE_PORT" "${REMOTE_USER}@${REMOTE_IP}" \
         "echo \"$SUDO_PASS\" | sudo -S -v" 2>/dev/null
-
       if [ $? -eq 0 ]; then
         echo "Пароль принят."
         break
@@ -302,17 +330,15 @@ if [[ "$TRANSFER_KEY" == "y" ]]; then
 
     CURRENT_PA=$(ssh -p "$REMOTE_PORT" "${REMOTE_USER}@${REMOTE_IP}" \
       "echo \"$SUDO_PASS\" | sudo -S sshd -T | grep '^passwordauthentication'")
-
     if echo "$CURRENT_PA" | grep -iq 'yes'; then
       echo "Сейчас вход по паролю ВКЛЮЧЕН."
     else
       echo "Сейчас вход по паролю ОТКЛЮЧЕН."
     fi
 
-    echo "Хотите включить (y) или отключить (n) вход по паролю? [y/n]:"
+    echo "Включить (y) или отключить (n) вход по паролю? [y/n]:"
     read -p "Ваш выбор: " TOGGLE
     TOGGLE=${TOGGLE,,}
-
     if [[ "$TOGGLE" == "y" ]]; then
       ssh -p "$REMOTE_PORT" "${REMOTE_USER}@${REMOTE_IP}" "
         echo \"$SUDO_PASS\" | sudo -S sed -i '/^[#[:space:]]*PasswordAuthentication/d' /etc/ssh/sshd_config
@@ -341,8 +367,8 @@ if [[ "$TRANSFER_KEY" == "y" ]]; then
   fi
 fi
 
-# Выводим публичный ключ
+echo
 echo "Ваш публичный ключ:"
 cat "${KEY_NAME}.pub"
-
-echo "Готово! Используйте публичный ключ для авторизации на серверах."
+echo
+echo "Готово! Скрипт завершён. Используйте публичный ключ для авторизации."
