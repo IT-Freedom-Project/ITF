@@ -44,5 +44,22 @@
 
 ```sudo curl -o ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && sudo bash ssh-keys-linux-mac-itf.sh```
 
-Если пакета sudo на машине нет, уберите из команды слово sudo.
+Если пакета sudo на машине нет и запускаете от имени root, уберите из команды слово sudo.
+
+## А теперь вариант настраиваем безопасность руками, а не скриптом:
+
+1. Проверьте, что команда ssh доступна:\
+```command -v ssh >/dev/null 2>&1 && echo "SSH уже установлен" || echo "SSH не установлен"```
+2. Если SSH не найден, установите его.
+   
+   Для Ubuntu/Debian можно выполнить:\
+   ```sudo apt-get update && sudo apt-get install -y openssh-client```
+
+   Для Fedora/RHEL/CentOS (используется пакетный менеджер dnf):\
+   ```sudo dnf install -y openssh-clients```
+   
+   Для macOS (при наличии Homebrew):\
+   ```brew install openssh```
+
+
   
