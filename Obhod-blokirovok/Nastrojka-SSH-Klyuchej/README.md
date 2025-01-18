@@ -38,11 +38,11 @@
            
 Для запуска скрипта выполняем, в зависимости от системы, эту команду на машине-хосте (откуда хотите заходить на сервер по ключу):
 
-```sudo wget -O security-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-Bezopasnosti/security-itf.sh && sudo bash security-itf.sh```
+```sudo wget -O ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && sudo bash ssh-keys-linux-mac-itf.sh```
 
 или эту:
 
-```sudo curl -o security-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-Bezopasnosti/security-itf.sh && sudo bash security-itf.sh```
+```sudo curl -o ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && sudo bash ssh-keys-linux-mac-itf.sh```
 
 Если пакета sudo на машине нет, уберите из команды слово sudo.
   
