@@ -6,6 +6,16 @@
 
 Скрипт может запускаться как от имени root, так и с sudo.
 
+Для запуска скрипта выполняем, в зависимости от системы, эту команду на машине-хосте (откуда хотите заходить на сервер по ключу):
+
+```sudo wget -O ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && sudo bash ssh-keys-linux-mac-itf.sh```
+
+или эту:
+
+```sudo curl -o ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && sudo bash ssh-keys-linux-mac-itf.sh```
+
+Если пакета sudo на машине нет и запускаете от имени root, уберите из команды слово sudo.
+
 Функционал:
    1. Проверка наличия SSH и папки ~/.ssh.
    2. Главное меню для выбора:
@@ -36,20 +46,15 @@
              - Если пользователь root – команды выполняются напрямую.
            -  Иначе – команды выполняются через sudo (каждая команда получает sudo-пароль).
            
-Для запуска скрипта выполняем, в зависимости от системы, эту команду на машине-хосте (откуда хотите заходить на сервер по ключу):
 
-```sudo wget -O ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && sudo bash ssh-keys-linux-mac-itf.sh```
-
-или эту:
-
-```sudo curl -o ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && sudo bash ssh-keys-linux-mac-itf.sh```
-
-Если пакета sudo на машине нет и запускаете от имени root, уберите из команды слово sudo.
 
 ## А теперь вариант настраиваем безопасность руками, а не скриптом:
 
 1. Проверьте, что команда ssh доступна:\
-```command -v ssh >/dev/null 2>&1 && echo "SSH уже установлен" || echo "SSH не установлен"```
+```command -v ssh >/dev/null 2>&1 && echo "SSH уже установлен" || echo "SSH не установлен"```\
+или:\
+```which ssh```
+
 2. Если SSH не найден, установите его.
    
    Для Ubuntu/Debian можно выполнить:\
@@ -58,8 +63,32 @@
    Для Fedora/RHEL/CentOS (используется пакетный менеджер dnf):\
    ```sudo dnf install -y openssh-clients```
    
+   Или на RHEL/CentOS 7 и старее:\
+   ```sudo yum install -y openssh-clients```
+   
    Для macOS (при наличии Homebrew):\
    ```brew install openssh```
+   
+3. Создание каталога ~/.ssh (если отсутствует):\
+   ```mkdir -p ~/.ssh```\
+   ```chmod 700 ~/.ssh```\
+   ```ls -ld ~/.ssh```\
+
+4.  Создание (или изменение) SSH-ключа (обычно RSA или ED25519, также введите нужное имя ключа):\
+    ```ssh-keygen -t rsa -C "комментарий/описание" -f ~/.ssh/id_rsa```\
+    Далее вас попросят ввести парольную фразу (необязательно).\
+    или:\
+    ```ssh-keygen -t ed25519 -C "комментарий" -f ~/.ssh/id_ed25519```\
+    Аналогично можно задать/не задать парольную фразу.\
+
+5. Изменение парольной фразы уже существующего ключа (введите нужное имя ключа):\
+   ```ssh-keygen -p -f ~/.ssh/id_ed25519```
+
+7. Изменение комментария уже существующего ключа (введите нужное имя ключа):\
+   ```ssh-keygen -c -f ~/.ssh/id_ed25519 -C "НовыйКомментарий"```
 
 
-  
+
+
+
+
