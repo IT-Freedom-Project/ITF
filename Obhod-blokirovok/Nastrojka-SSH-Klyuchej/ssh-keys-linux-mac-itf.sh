@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
+echo
 echo "Скрипт для создания, изменения и передачи SSH-ключей (RSA или ED25519) от IT Freedom Project v1.0 (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube)"
+echo
 #======================================================================
 # Скрипт для создания, изменения и передачи SSH-ключей (RSA или ED25519),
 # а также для редактирования настроек входа по паролю на удалённом сервере.
