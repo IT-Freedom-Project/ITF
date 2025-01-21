@@ -8,11 +8,15 @@
 
 Для запуска скрипта выполняем, в зависимости от системы, эту команду на машине-хосте (откуда хотите заходить на сервер по ключу):
 
-```sudo wget -O ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && sudo bash ssh-keys-linux-mac-itf.sh```
+```
+sudo wget -O ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && sudo bash ssh-keys-linux-mac-itf.sh
+```
 
 или эту:
 
-```sudo curl -o ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && sudo bash ssh-keys-linux-mac-itf.sh```
+```
+sudo curl -o ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && sudo bash ssh-keys-linux-mac-itf.sh
+```
 
 Если пакета sudo на машине нет и запускаете от имени root, уберите из команды слово sudo.
 
@@ -50,56 +54,113 @@
 
 ## А теперь вариант настройки ssh ключей руками, а не скриптом:
 
-1. Проверьте, что команда ssh доступна:\
-```command -v ssh >/dev/null 2>&1 && echo "SSH уже установлен" || echo "SSH не установлен"```\
-или:\
-```which ssh```
+1. Проверьте, что команда ssh доступна:
+   ```
+   command -v ssh >/dev/null 2>&1 && echo "SSH уже установлен" || echo "SSH не установлен"
+   ```
+   или (покажет путь к пакету):
+   ```
+   which ssh
+   ```
 
 2. Если SSH не найден, установите его.
    
-   Для Ubuntu/Debian можно выполнить:\
-   ```sudo apt-get update && sudo apt-get install -y openssh-client```
+   Для Ubuntu/Debian можно выполнить:
+   ```
+   sudo apt-get update && sudo apt-get install -y openssh-client
+   ```
 
-   Для Fedora/RHEL/CentOS (используется пакетный менеджер dnf):\
-   ```sudo dnf install -y openssh-clients```
+   Для Fedora/RHEL/CentOS (используется пакетный менеджер dnf):
+   ```
+   sudo dnf install -y openssh-clients
+   ```
    
-   Или на RHEL/CentOS 7 и старее:\
-   ```sudo yum install -y openssh-clients```
+   Или на RHEL/CentOS 7 и старее:
+   ```
+   sudo yum install -y openssh-clients
+   ```
    
-   Для macOS (при наличии Homebrew):\
-   ```brew install openssh```
+   Для macOS (при наличии Homebrew):
+   ```
+   brew install openssh
+   ```
    
-3. Создание каталога ~/.ssh (если отсутствует):\
-   ```mkdir -p ~/.ssh```\
-   ```chmod 700 ~/.ssh```\
-   ```ls -ld ~/.ssh```\
+3. Создание каталога ~/.ssh (если отсутствует):
+   ```
+   mkdir -p ~/.ssh
+   chmod 700 ~/.ssh
+   ls -ld ~/.ssh
+   ```
 
-4.  Создание (или изменение) SSH-ключа (обычно RSA или ED25519, также введите нужное имя ключа):\
-    ```ssh-keygen -t rsa -C "комментарий/описание" -f ~/.ssh/id_rsa```\
-    Можно добавить опцию -b 4096 для увеличения длины RSA ключа. Далее вас попросят ввести парольную фразу (необязательно). \
-    или:\
-    ```ssh-keygen -t ed25519 -C "комментарий" -f ~/.ssh/id_ed25519```\
-    Аналогично можно задать/не задать парольную фразу.
-
-5. Изменение парольной фразы уже существующего ключа (введите нужное имя ключа):\
-   ```ssh-keygen -p -f ~/.ssh/id_ed25519```
-
-7. Изменение комментария уже существующего ключа (введите нужное имя ключа и комментарий):\
-   ```ssh-keygen -c -f ~/.ssh/id_ed25519 -C "НовыйКомментарий"```
-
-8. Добавление ключа в ssh-agent, чтобы один раз ввести парольную фразу и не вводить её при каждом вызове SSH:
+4. Создание (или изменение) SSH-ключа (обычно RSA или ED25519).\
+   Если в формате RSA (введите нужное имя ключа вместо id_rsa):
+   ```
+   ssh-keygen -t rsa -C "комментарий/описание" -f ~/.ssh/id_rsa
+   ```
+   Можно добавить опцию -b 4096 для увеличения длины RSA ключа. Далее вас попросят ввести парольную фразу (необязательно).
    
-   Проверьте, запущен ли он:\
-   ```eval "$(ssh-agent -s)"```
-   
-   Добавьте туда ключ (введите нужное имя ключа):\
-   ```ssh-add ~/.ssh/id_ed25519```
-   
-   Показывает список добавленных ключей:\
-   ```ssh-add -l```
+   Или делаем в формате Ed25519, что рекомендую (введите нужное имя ключа вместо id_ed25519):
+   ```
+   ssh-keygen -t ed25519 -C "комментарий" -f ~/.ssh/id_ed25519
+   ```
+   Аналогично можно задать/не задать парольную фразу.
 
-    Удалить все добавленные ключи:\
-   ```ssh-add -D```
+5. Изменение парольной фразы уже существующего ключа (введите нужное имя ключа вместо id_ed25519):
+   ```
+   ssh-keygen -p -f ~/.ssh/id_ed25519
+   ```
+
+6. Изменение комментария уже существующего ключа (введите нужное имя ключа вместо id_ed25519 и комментарий):
+   ```
+   ssh-keygen -c -f ~/.ssh/id_ed25519 -C "НовыйКомментарий"
+   ```
+
+7. Добавление ключа в ssh-agent, чтобы один раз ввести парольную фразу и не вводить её при каждом вызове SSH:
+   
+   Проверьте, запущен ли он:
+   ```
+   eval "$(ssh-agent -s)"
+   ```
+   
+   Добавьте туда ключ (введите нужное имя ключа вместо id_ed25519):
+   ```
+   ssh-add ~/.ssh/id_ed25519
+   ```
+   
+   Показывает список добавленных ключей:
+   ```
+   ssh-add -l
+   ```
+
+    Удалить все добавленные ключи:
+   ```
+   ssh-add -D
+   ```
+   
+8. Передача ключа на удалённый сервер (введите нужное имя ключа вместо id_ed25519.pub, нужный порт в Port (22 по умолчанию), логин вместо remote_user и ip вместо remote_host):
+   ```
+   ssh-copy-id -i ~/.ssh/id_ed25519.pub -p PORT remote_user@remote_host
+   ```
+   ssh-copy-id попросит пароль для удалённого пользователя (пароль от учётной записи на сервере).
+
+   Если ошибка "Too many authentication failures" из-за того, что вы добавили много ключей в ssh-agent (скажем, для каждого сервера свой, что не рекомендую без доп. настроек), то сбрасываем их:
+   ```
+   ssh-add -D
+   ```
+   и повторяем c заменой на нужные значения:
+   ```
+   ssh-copy-id -i ~/.ssh/id_ed25519.pub -p PORT remote_user@remote_host
+   ```
+
+   Если вдруг ssh-copy-id работает некорректно, то пробуем (введите нужное имя ключа вместо id_ed25519.pub, нужный порт в Port (22 по умолчанию), логин вместо remote_user и ip вместо emote_host):
+   ```
+   cat ~/.ssh/id_ed25519.pub | ssh -p PORT remote_user@remote_host \
+   "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+   ```
+   При необходимости SSH запросит пароль.
+
+
+
 
 
 
