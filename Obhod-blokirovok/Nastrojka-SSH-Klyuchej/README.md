@@ -152,7 +152,7 @@ sudo curl -o ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Free
    ssh-copy-id -i ~/.ssh/id_ed25519.pub -p PORT remote_user@remote_host
    ```
 
-   Если вдруг ssh-copy-id работает некорректно, то пробуем (введите нужное имя ключа вместо id_ed25519.pub, нужный порт в Port (22 по умолчанию), логин вместо remote_user и ip вместо emote_host):
+   Если вдруг ssh-copy-id работает некорректно, то пробуем (введите нужное имя ключа вместо id_ed25519.pub, нужный порт в Port (22 по умолчанию), логин вместо remote_user и ip вместо remote_host):
    ```
    cat ~/.ssh/id_ed25519.pub | ssh -p PORT remote_user@remote_host \
    "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
