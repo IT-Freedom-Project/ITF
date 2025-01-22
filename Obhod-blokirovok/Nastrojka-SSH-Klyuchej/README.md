@@ -161,9 +161,40 @@ sudo curl -o ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Free
 
 9. Изменение настройки входа по паролю на сервере.
     
-   Сначала заходим на сервер как root или пользователь с правами sudo. На худой конец? переключитесь на root прямо на сервере командой '''su''' с вводом пароля для root. Выполняем:
-   nano /etc/ssh/sshd_config
-
+   Сначала заходим на удалённый сервер как root или пользователь с правами sudo. 
+   Если надо отключить вход по паролю:
+   ```
+   sudo sed -i 's/^[#[:space:]]*PasswordAuthentication[[:space:]]\+yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+   ```
+   Потом перезагружаем SSH:
+   ```|
+   sudo systemctl restart sshd || sudo systemctl restart ssh
+   ```
+   Если надо включить вход по паролю:
+   ```
+   sudo sed -i 's/^[#[:space:]]*PasswordAuthentication[[:space:]]\+no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+   ```
+   Потом перезагружаем SSH:
+   ```|
+   sudo systemctl restart sshd || sudo systemctl restart ssh
+   ```
+   Если хочется совсем уж ручками. Выполняем на примере редактора nano (если вы зашли как root и в системе нет sudo, то уберите из команд sudo).
+   ```
+   sudo nano /etc/ssh/sshd_config
+   ```
+   Ищем строку:
+   ```
+   #PasswordAuthentication yes
+   ```
+   Меняем на:
+   ```
+   PasswordAuthentication no
+   ```
+   Нажимаем Ctrl + O , потом Ctrl + X. Если надо снова включить вход по паролю, то меняем no на yes обратно.
+   После изменений выполняем:
+   ```
+   sudo systemctl restart sshd || sudo systemctl restart ssh
+   ```
 
 
 
