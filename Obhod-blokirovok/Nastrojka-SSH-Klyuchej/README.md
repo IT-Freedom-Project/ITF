@@ -9,7 +9,7 @@
 Для запуска скрипта выполняем, в зависимости от системы, эту команду на машине-хосте (откуда хотите заходить на сервер по ключу):
 
 ```
-sudo wget -O ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && sudo bash ssh-keys-linux-mac-itf.sh
+sudo wget -q -O ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && sudo bash ssh-keys-linux-mac-itf.sh
 ```
 
 или эту:
