@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 echo
-echo "Скрипт для создания, изменения и передачи SSH-ключей (RSA или ED25519) от IT Freedom Project v1.2 (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube)"
+echo "Скрипт для создания, изменения и передачи SSH-ключей (RSA или ED25519) от IT Freedom Project v1.3"
+echo "(https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube)"
 echo
+
 #======================================================================
 # Скрипт для создания, изменения и передачи SSH-ключей (RSA или ED25519),
 # а также для редактирования настроек входа по паролю на удалённом сервере.
 #
 # 1) Проверка наличия SSH и ~/.ssh (если нет — устанавливаем/создаём).
+#    - Вызываем sudo ТОЛЬКО при необходимости установки пакета.
 # 2) Главное меню:
 #     - Выбор типа ключа (RSA, ED25519, ИЛИ выход из скрипта).
 #     - Указание имени файла ключа.
@@ -25,48 +28,59 @@ echo
 #     - Если "Too many authentication failures" — очищаем agent, повтор.
 #     - Если ключи не подходят — ssh-copy-id стандартно попросит пароль.
 # 4) Настройка входа по паролю (final_server_setup):
-#     - **(УБРАНО)** Не выполняем SSHREM в начале.
-#     - Вместо этого просто делаем SSHADD ключ, 
+#     - НЕ выполняем SSHREM в начале (как просили).
+#     - Вместо этого просто делаем SSHADD ключ
 #       и при подключении используем "-i keyfile".
 #     - Получаем текущее состояние passwordauthentication,
 #       выводим адаптированное сообщение (включён/выключен/не получено).
 #     - Предлагаем 1) ничего не менять, 2) включить/отключить.
 #     - Если не root, спрашиваем sudo-пароль один раз.
+#
+# Запускается ТОЛЬКО как обычный пользователь:
+#    bash ssh-keys-linux-mac-itf.sh
+#
+# Если при установке пакетов нужно sudo, скрипт спросит пароль.
 #======================================================================
 
 ##############################################################################
-# 1) Проверка и установка SSH (если отсутствует)
+# 1) Проверка наличия SSH (если отсутствует) — вызываем sudo только точечно
 ##############################################################################
 check_ssh_and_install() {
   if command -v ssh >/dev/null 2>&1; then
     echo "SSH уже установлен."
-  else
-    echo "SSH не найден. Пытаемся установить..."
-    if [[ "$(uname)" == "Darwin" ]]; then
-      if command -v brew >/dev/null 2>&1; then
-        brew install openssh
-      else
-        echo "brew не найден. Установите SSH вручную."
-        exit 1
-      fi
+    return
+  fi
+
+  echo "SSH не найден. Пытаемся установить..."
+  local OS_NAME="$(uname)"
+  if [[ "$OS_NAME" == "Darwin" ]]; then
+    # macOS
+    if command -v brew >/dev/null 2>&1; then
+      brew install openssh
     else
-      if command -v apt-get >/dev/null 2>&1; then
-        [[ $EUID -eq 0 ]] && apt-get update && apt-get install -y openssh-client || sudo apt-get update && sudo apt-get install -y openssh-client
-      elif command -v dnf >/dev/null 2>&1; then
-        [[ $EUID -eq 0 ]] && dnf install -y openssh-clients || sudo dnf install -y openssh-clients
-      elif command -v yum >/dev/null 2>&1; then
-        [[ $EUID -eq 0 ]] && yum install -y openssh-clients || sudo yum install -y openssh-clients
-      else
-        echo "Не удалось определить пакетный менеджер. Установите SSH вручную."
-        exit 1
-      fi
-    fi
-    if ! command -v ssh >/dev/null 2>&1; then
-      echo "Не удалось установить SSH. Завершение."
+      echo "brew не найден. Установите SSH вручную или через другой менеджер."
       exit 1
     fi
-    echo "SSH установлен."
+  else
+    # Предположим Linux
+    if command -v apt-get >/dev/null 2>&1; then
+      sudo apt-get update && sudo apt-get install -y openssh-client
+    elif command -v dnf >/dev/null 2>&1; then
+      sudo dnf install -y openssh-clients
+    elif command -v yum >/dev/null 2>&1; then
+      sudo yum install -y openssh-clients
+    else
+      echo "Не удалось определить пакетный менеджер (apt-get/dnf/yum). Установите SSH вручную."
+      exit 1
+    fi
   fi
+
+  # Проверим, что установка прошла успешно
+  if ! command -v ssh >/dev/null 2>&1; then
+    echo "Не удалось установить SSH. Завершение."
+    exit 1
+  fi
+  echo "SSH установлен."
 }
 
 ##############################################################################
@@ -184,60 +198,79 @@ transfer_key() {
   REM_PORT=${REM_PORT:-22}
 
   echo "Пробуем передать ключ (ssh-copy-id) по ключам..."
-  local output
-  output="$(ssh-copy-id -i "$keyfile" -p "$REM_PORT" "${REM_USER}@${REM_HOST}" 2>&1)"
-  local status=$?
-  if [[ $status -eq 0 ]]; then
-    echo "$output"
-    final_server_setup "$keyfile" "$REM_USER" "$REM_HOST" "$REM_PORT"
-    return
-  fi
-
-  echo "$output"
-  if echo "$output" | grep -q "Too many authentication failures"; then
-    echo "Обнаружено 'Too many authentication failures'. Очищаем ssh-agent..."
-    SSHREM
-    echo "Пробуем ещё раз с ssh-copy-id..."
+  if command -v ssh-copy-id >/dev/null 2>&1; then
+    # если есть ssh-copy-id
+    local output
     output="$(ssh-copy-id -i "$keyfile" -p "$REM_PORT" "${REM_USER}@${REM_HOST}" 2>&1)"
-    status=$?
+    local status=$?
     if [[ $status -eq 0 ]]; then
       echo "$output"
       final_server_setup "$keyfile" "$REM_USER" "$REM_HOST" "$REM_PORT"
       return
     fi
-    echo "$output"
-    echo "Вторая попытка не удалась."
-  else
-    echo "Передача ключа по ключам не удалась (ключи не подошли или другая ошибка)."
-  fi
 
-  echo "Пожалуйста, введите пароль вручную, если ssh-copy-id запросит."
-  output="$(ssh-copy-id -i "$keyfile" -p "$REM_PORT" "${REM_USER}@${REM_HOST}")"
-  status=$?
-  if [[ $status -eq 0 ]]; then
     echo "$output"
-    final_server_setup "$keyfile" "$REM_USER" "$REM_HOST" "$REM_PORT"
-    return
+    if echo "$output" | grep -q "Too many authentication failures"; then
+      echo "Обнаружено 'Too many authentication failures'. Очищаем ssh-agent..."
+      SSHREM
+      echo "Пробуем ещё раз с ssh-copy-id..."
+      output="$(ssh-copy-id -i "$keyfile" -p "$REM_PORT" "${REM_USER}@${REM_HOST}" 2>&1)"
+      status=$?
+      if [[ $status -eq 0 ]]; then
+        echo "$output"
+        final_server_setup "$keyfile" "$REM_USER" "$REM_HOST" "$REM_PORT"
+        return
+      fi
+      echo "$output"
+      echo "Вторая попытка не удалась."
+    else
+      echo "Передача ключа по ключам не удалась (ключи не подошли или другая ошибка)."
+    fi
+
+    echo "Пожалуйста, введите пароль вручную, если ssh-copy-id запросит."
+    output="$(ssh-copy-id -i "$keyfile" -p "$REM_PORT" "${REM_USER}@${REM_HOST}")"
+    status=$?
+    if [[ $status -eq 0 ]]; then
+      echo "$output"
+      final_server_setup "$keyfile" "$REM_USER" "$REM_HOST" "$REM_PORT"
+      return
+    else
+      echo "ssh-copy-id не сработал."
+      echo "Пробуем fallback с использованием команды cat..."
+      ssh "${REM_USER}@${REM_HOST}" -p "$REM_PORT" <<EOF
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+EOF
+      ssh "${REM_USER}@${REM_HOST}" -p "$REM_PORT" "cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys" < "$pubfile"
+      if [[ $? -eq 0 ]]; then
+        echo "Ключ успешно передан через fallback (cat)."
+        final_server_setup "$keyfile" "$REM_USER" "$REM_HOST" "$REM_PORT"
+      else
+        echo "Передача ключа не удалась."
+        exit 1
+      fi
+    fi
+
   else
-    echo "ssh-copy-id не сработал."
-    echo "Пробуем fallback с использованием команды cat..."
+    # если ssh-copy-id НЕТ, сразу fallback
+    echo "ssh-copy-id не найден. Используем fallback cat-метод."
     ssh "${REM_USER}@${REM_HOST}" -p "$REM_PORT" <<EOF
 mkdir -p ~/.ssh
 chmod 700 ~/.ssh
 EOF
     ssh "${REM_USER}@${REM_HOST}" -p "$REM_PORT" "cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys" < "$pubfile"
     if [[ $? -eq 0 ]]; then
-      echo "Ключ успешно передан через fallback (cat)."
+      echo "Ключ успешно передан (fallback)."
       final_server_setup "$keyfile" "$REM_USER" "$REM_HOST" "$REM_PORT"
     else
-      echo "Передача ключа не удалась."
+      echo "Ошибка при передаче ключа (fallback)."
       exit 1
     fi
   fi
 }
 
 ##############################################################################
-# 7) Финальная настройка входа по паролю
+# 7) Финальная настройка входа по паролю — БЕЗ SSHREM в начале
 ##############################################################################
 final_server_setup() {
   local keyfile="$1"
@@ -247,7 +280,6 @@ final_server_setup() {
 
   echo
   echo "=== Настройка входа по паролю ==="
-  # УБИРАЕМ SSHREM, как просили, т.е. не делаем SSHREM здесь.
   echo "Добавляем наш ключ в ssh-agent (если не добавлен)."
   SSHADD "$keyfile"
 
@@ -258,7 +290,7 @@ final_server_setup() {
   if [[ "$rem_user" == "root" ]]; then
     current="$(ssh -tt -i "$keyfile" -p "$rem_port" "${rem_user}@${rem_host}" "sshd -T 2>/dev/null | grep '^passwordauthentication'")"
   else
-    read -s -p "Введите sudo пароль для ${rem_user} на сервере для получения статуса: " SUDOPASS
+    read -s -p "Введите sudo пароль для ${rem_user} на сервере (получение статуса): " SUDOPASS
     echo
     current="$(ssh -tt -i "$keyfile" -p "$rem_port" "${rem_user}@${rem_host}" "echo \"$SUDOPASS\" | sudo -S sshd -T 2>/dev/null | grep '^passwordauthentication'")"
   fi
