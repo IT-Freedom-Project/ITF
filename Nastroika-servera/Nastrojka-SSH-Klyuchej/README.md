@@ -9,13 +9,13 @@
 Для запуска скрипта выполняем, в зависимости от системы, эту команду на машине-хосте (откуда хотите заходить на сервер по ключу):
 
 ```
-sudo wget -q -O ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && bash ssh-keys-linux-mac-itf.sh
+sudo wget -q -O ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Nastroika-servera/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && bash ssh-keys-linux-mac-itf.sh
 ```
 
 или эту:
 
 ```
-sudo curl -o ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Obhod-blokirovok/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && bash ssh-keys-linux-mac-itf.sh
+sudo curl -o ssh-keys-linux-mac-itf.sh https://raw.githubusercontent.com/IT-Freedom-Project/ITF/main/Nastroika-servera/Nastrojka-SSH-Klyuchej/ssh-keys-linux-mac-itf.sh && bash ssh-keys-linux-mac-itf.sh
 ```
 
 Если пакета sudo на машине нет и запускаете от имени root, уберите из команды слово sudo. Сам по себе скачанный скрипт ssh-keys-linux-mac-itf.sh требуется выполнять НЕ ЧЕРЕЗ SUDO, иначе ключи будут создаваться для root, а не для текущего пользователя. Sudo в командах выше стоит только для wget и curl.
