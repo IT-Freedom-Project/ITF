@@ -11,7 +11,7 @@
 ```sudo apt upgrade -y```
 
 2. Ставим  HAProxy:\
-```sudo apt install -y```
+```sudo apt install -y haproxy```
 
 3. Обнуляем конфиг по умолчанию:\
 ```sudo truncate -s 0 /etc/haproxy/haproxy.cfg```
