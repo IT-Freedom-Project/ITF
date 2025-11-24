@@ -1,5 +1,8 @@
-# Проксирование трафика через сервер РФ с помощью Haproxy (без установки панели)
-Сначала рекомендую настроить безопасность сервера, вход по ключам и накатить BBR для ускорения сети.
+# Проксирование трафика через сервер в РФ с помощью HAProxy (без установки панели)
+Сначала рекомендую настроить [безопасность сервера](https://github.com/IT-Freedom-Project/ITF/tree/main/nastrojka-servera/nastrojka-bezopasnosti), [вход по ключам](https://github.com/IT-Freedom-Project/ITF/tree/main/nastrojka-servera/nastrojka-ssh-klyuchej) и [накатить BBR](https://github.com/IT-Freedom-Project/ITF/tree/main/nastrojka-servera/nastrojka-bbr) для ускорения сети.
+
+Не забудьте предварительно открыть 443 порт, если блокируете. На облачных хостингах порты могут открываться из личного кабинета:
+```sudo ufw allow 443/tcp```
 
 1. Обновляем систему:\
 ```sudo apt update``` \
@@ -15,7 +18,7 @@
   
 5. Открываем конфиг:\
    ```sudo nano /etc/haproxy/haproxy.cfg```
-6. Копируем текст через ctrl + shift + v, сохраняем через ctl + o, потом enter, потом ctrl + x.
+6. Копируем текст через Ctrl + Shift + V, сохраняем через Ctrl + O, потом Enter, потом Ctrl + X .
 7. Проверяем валидность конфига:\
 ```sudo haproxy -c -f /etc/haproxy/haproxy.cfg```
 8. Если всё ок, то мягко перезапускаем haproxy:\
