@@ -1,4 +1,7 @@
 # Проксирование TCP трафика с помощью HAProxy
+
+Способ позволяет проксировать любой TCP трафик через промежуточный сервер, что может быть полезно для ряда протоколов. Должно быть совместимо с [проксированием UDP трафика через iptables](https://github.com/IT-Freedom-Project/ITF/tree/main/proksirovanie-trafika/proksirovanie-udp-iptables). Настройка выполняется на промежуточном сервере.
+
 Сначала рекомендую настроить [безопасность сервера](https://github.com/IT-Freedom-Project/ITF/tree/main/nastrojka-servera/nastrojka-bezopasnosti), [вход по ключам](https://github.com/IT-Freedom-Project/ITF/tree/main/nastrojka-servera/nastrojka-ssh-klyuchej) и [накатить BBR](https://github.com/IT-Freedom-Project/ITF/tree/main/nastrojka-servera/nastrojka-bbr) для ускорения сети.
 
 Не забудьте предварительно открыть 443 порт, если блокируете:
