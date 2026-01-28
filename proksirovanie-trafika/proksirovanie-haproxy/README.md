@@ -1,4 +1,4 @@
-# Проксирование tcp трафика с помощью HAProxy
+# Проксирование TCP трафика с помощью HAProxy
 Сначала рекомендую настроить [безопасность сервера](https://github.com/IT-Freedom-Project/ITF/tree/main/nastrojka-servera/nastrojka-bezopasnosti), [вход по ключам](https://github.com/IT-Freedom-Project/ITF/tree/main/nastrojka-servera/nastrojka-ssh-klyuchej) и [накатить BBR](https://github.com/IT-Freedom-Project/ITF/tree/main/nastrojka-servera/nastrojka-bbr) для ускорения сети.
 
 Не забудьте предварительно открыть 443 порт, если блокируете:
