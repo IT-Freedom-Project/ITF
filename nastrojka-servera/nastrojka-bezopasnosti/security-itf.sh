@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Скрипт для настройки безопасности VPS от IT Freedom Project v1.1 (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube)"
+echo "Скрипт для настройки безопасности VPS от IT Freedom Project v1.1 (https://github.com/IT-Freedom-Project/ITF)"
 
 #!/bin/bash
 
