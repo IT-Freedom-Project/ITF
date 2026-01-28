@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Скрипт для оптимизации TCP (+BBR) и UDP на Linux сервере от IT Freedom Project (https://www.youtube.com/@it-freedom-project), (https://github.com/IT-Freedom-Project/Youtube) "
+echo "Скрипт для оптимизации TCP (+BBR) и UDP на Linux сервере от IT Freedom Project (https://github.com/IT-Freedom-Project/ITF) "
 
 # Функция для удаления всех существующих строк с параметрами в файле /etc/security/limits.conf
 remove_existing_settings() {
