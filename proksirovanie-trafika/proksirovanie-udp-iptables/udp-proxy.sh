@@ -1,9 +1,5 @@
 #!/bin/bash
 
-echo
-echo "Скрипт для настройки проксирования UDP от IT Freedom Project v1"
-echo "https://github.com/IT-Freedom-Project/ITF"
-echo
 
 # Пути к файлам конфигурации
 RULES_SCRIPT="/etc/iptables/direct_rules.sh"
@@ -127,7 +123,8 @@ delete_all() {
 while true; do
     clear
     echo "========================================"
-    echo "   Управление UDP Proxy (Ubuntu 22/24, Debian)  "
+    echo "   Управление UDP Proxy v1 (Ubuntu 22/24, Debian)  "
+    echo "     https://github.com/IT-Freedom-Project/ITF "
     echo "========================================"
     echo "1) Посмотреть существующие правила"
     echo "2) Добавить новое правило"
