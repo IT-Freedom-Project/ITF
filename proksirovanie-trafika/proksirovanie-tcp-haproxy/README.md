@@ -1,4 +1,4 @@
-# Проксирование TCP трафика с помощью HAProxy
+# Проксирование TCP трафика с помощью HAProxy (Ubuntu/Debian)
 
 Способ позволяет проксировать любой TCP трафик через промежуточный сервер, что может быть полезно для ряда протоколов. Должно быть совместимо с [проксированием UDP трафика через iptables](https://github.com/IT-Freedom-Project/ITF/tree/main/proksirovanie-trafika/proksirovanie-udp-iptables). Настройка выполняется на промежуточном сервере.
 
