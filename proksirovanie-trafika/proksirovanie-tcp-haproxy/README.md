@@ -16,7 +16,7 @@
 3. Обнуляем конфиг по умолчанию:\
 ```sudo truncate -s 0 /etc/haproxy/haproxy.cfg```
 
-4. Редактируем [конфиг](https://github.com/IT-Freedom-Project/ITF/blob/main/proksirovanie-trafika/proksirovanie-haproxy/haproxy.cfg), подставляя свои SNI в группах и IP своего конечного сервера вместо 100.150.200.250 и 101.151.201.251.
+4. Редактируем [конфиг](https://github.com/IT-Freedom-Project/ITF/blob/main/proksirovanie-trafika/proksirovanie-tcp-haproxy/haproxy.cfg), подставляя свои SNI в группах и IP своего конечного сервера вместо 100.150.200.250 и 101.151.201.251.
   
 5. Открываем конфиг:\
    ```sudo nano /etc/haproxy/haproxy.cfg```
